@@ -27,7 +27,6 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
   --pill-bg:#0a1f14;--pill-border:#00e08a33;
   --pkt-hover-bg:#0a1a22;
   --term-bg:#020507;--term-track:#020507;--term-thumb:#1c2330;
-  --term-fg:#b8c8dc;--term-bright:#e8f0f8;--term-dim:#4a5870;--term-accent:#00d4ff;
   --hdr-title:#fff;
 }
 [data-theme="light"]{
@@ -37,7 +36,7 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
   --text:#3a4e66;--bright:#111d2b;--dim:#7a90a8;
   --pill-bg:#d8f0e8;--pill-border:#00885844;
   --pkt-hover-bg:#e4f0f8;
-  --term-bg:#141920;--term-track:#0f1318;--term-thumb:#253040;
+  --term-bg:#f4f7fb;--term-track:#e8eef5;--term-thumb:#c6d2e2;
   --hdr-title:#111d2b;
 }
 @media(prefers-color-scheme:light){
@@ -48,7 +47,7 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
     --text:#3a4e66;--bright:#111d2b;--dim:#7a90a8;
     --pill-bg:#d8f0e8;--pill-border:#00885844;
     --pkt-hover-bg:#e4f0f8;
-    --term-bg:#141920;--term-track:#0f1318;--term-thumb:#253040;
+    --term-bg:#f4f7fb;--term-track:#e8eef5;--term-thumb:#c6d2e2;
     --hdr-title:#111d2b;
   }
 }
@@ -226,8 +225,8 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .craft-opts input[type=checkbox]{accent-color:var(--orange)}
 
 /* Terminal log */
-.terminal{background:var(--term-bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;color:var(--term-fg)}
-.term-hdr{padding:10px 15px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;color:var(--term-dim)}
+.terminal{background:var(--term-bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;color:var(--text)}
+.term-hdr{padding:10px 15px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;color:var(--dim)}
 .term-dots{display:flex;gap:5px}
 .term-dot{width:9px;height:9px;border-radius:50%}
 .term-body{height:280px;overflow-y:auto;padding:10px 14px;font-family:var(--mono);font-size:.72rem;
@@ -236,17 +235,17 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .term-body::-webkit-scrollbar-track{background:var(--term-track)}
 .term-body::-webkit-scrollbar-thumb{background:var(--term-thumb);border-radius:2px}
 .log-entry{margin-bottom:10px;border-left:2px solid var(--border2);padding-left:10px}
-.log-entry:last-child{border-left-color:var(--term-accent)}
-.log-ts{color:var(--term-dim);font-size:.62rem}
-.log-label{color:var(--term-bright);font-weight:700;margin-left:8px}
+.log-entry:last-child{border-left-color:var(--accent)}
+.log-ts{color:var(--dim);font-size:.62rem}
+.log-label{color:var(--bright);font-weight:700;margin-left:8px}
 .log-pkt{display:flex;align-items:baseline;gap:10px;margin-top:3px}
-.log-note{color:var(--term-dim);font-size:.62rem;width:52px;flex-shrink:0;text-align:right}
-.log-hex{color:var(--term-accent);letter-spacing:.06em;font-size:.7rem}
-.log-hex span{color:var(--term-dim)}
-.log-empty{color:var(--term-dim);font-style:italic;padding:20px 0;text-align:center}
+.log-note{color:var(--dim);font-size:.62rem;width:52px;flex-shrink:0;text-align:right}
+.log-hex{color:var(--accent);letter-spacing:.06em;font-size:.7rem}
+.log-hex span{color:var(--dim)}
+.log-empty{color:var(--dim);font-style:italic;padding:20px 0;text-align:center}
 .term-footer{padding:8px 14px;border-top:1px solid var(--border2);display:flex;align-items:center;gap:10px}
-.term-count{font-family:var(--mono);font-size:.62rem;color:var(--term-dim);flex:1}
-#auto-scroll-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--term-dim);cursor:pointer}
+.term-count{font-family:var(--mono);font-size:.62rem;color:var(--dim);flex:1}
+#auto-scroll-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--dim);cursor:pointer}
 
 /* API table entry for log */
 .api-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -280,8 +279,14 @@ details[open] .chev{transform:rotate(180deg)}
 .color-pill.sel{border-color:transparent;color:#000;font-weight:700}
 .cp-blue   {--pc:#4488ff}.cp-green  {--pc:#00e08a}.cp-white  {--pc:#d0e8ff}
 .cp-red    {--pc:#ff4060}.cp-orange {--pc:#ff7340}.cp-purple {--pc:#b060ff}
-.cp-pink   {--pc:#ff70c0}.cp-yellow {--pc:#ffd060}.cp-rainbow{--pc:transparent}
+.cp-pink   {--pc:#ff70c0}.cp-yellow {--pc:#ffd060}.cp-rainbow{--pc:#b060ff}
 .color-pill:not(.sel):hover{border-color:var(--pc,var(--accent));color:var(--pc,var(--accent))}
+.cp-rainbow:not(.sel):hover{
+  border-color:transparent;
+  background:linear-gradient(var(--panel2),var(--panel2)) padding-box,
+    linear-gradient(90deg,#ff4060,#ff7340,#ffd060,#00e08a,#4488ff,#b060ff,#ff70c0) border-box;
+  color:var(--bright);
+}
 .cp-blue.sel   {background:#4488ff}.cp-green.sel  {background:#00e08a}
 .cp-white.sel  {background:#d0e8ff}.cp-red.sel    {background:#ff4060}
 .cp-orange.sel {background:#ff7340}.cp-purple.sel {background:#b060ff}
@@ -306,19 +311,6 @@ details[open] .chev{transform:rotate(180deg)}
   <h1>ESPiBright</h1>
   <div class="hdr-r">
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark theme">☀</button>
-    <div class="time-tog">
-      <span>REPEAT</span>
-      <input type="number" id="tx-repeat" min="1" max="20" value="5"
-        style="width:36px;background:var(--bg);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:.75rem;text-align:center;border-radius:4px;padding:2px 1px;outline:none;-moz-appearance:textfield"
-        onchange="setRepeat(this.value)">
-    </div>
-    <div class="time-tog">
-      <span>+TIME</span>
-      <label class="sw">
-        <input type="checkbox" id="global-time" checked onchange="setGlobalTime(this.checked)">
-        <span class="sw-tr"></span>
-      </label>
-    </div>
     <div class="pill">&#9679; CONNECTED</div>
   </div>
 </header>
@@ -378,7 +370,7 @@ details[open] .chev{transform:rotate(180deg)}
           <div class="ch-l"><div class="dot r"></div><span class="ch-name">RGB</span></div>
           <div style="flex:1;display:flex;align-items:center;gap:9px">
             <span style="font-size:.72rem;color:var(--dim)">Speed</span>
-            <select id="rgb-cycle" class="num" style="font-size:.72rem;padding:2px 4px;background:var(--panel2);color:var(--bright);border:1px solid var(--border);border-radius:4px;cursor:pointer" onchange="updateSchedStatePreviews()">
+            <select id="rgb-cycle" class="num" style="font-size:.72rem;padding:2px 4px;min-width:62px;background:var(--panel2);color:var(--bright);border:1px solid var(--border);border-radius:4px;cursor:pointer" onchange="updateSchedStatePreviews()">
               <option value="1">Static</option>
               <option value="2">3s</option>
               <option value="4">4s</option>
@@ -415,20 +407,21 @@ details[open] .chev{transform:rotate(180deg)}
     <span class="card-title">Device Time</span>
     <span id="time-display">--:--:--</span>
   </div>
-  <div class="card-body">
-    <div class="time-grid">
+  <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:16px">
+    <span style="font-size:.68rem;color:var(--dim);text-align:center">Sets the time on the ESPiBright controller, not the fixture directly. Use "Send Time Packets" to push the time to the fixture.</span>
+    <div class="time-grid" style="justify-content:center">
       <div class="tf"><label>Hour</label><input type="number" id="t-hh" min="0" max="23" value="19" oninput="updTDisp()"></div>
       <span class="tsep">:</span>
       <div class="tf"><label>Min</label><input type="number" id="t-mm" min="0" max="59" value="20" oninput="updTDisp()"></div>
       <span class="tsep">:</span>
       <div class="tf"><label>Sec</label><input type="number" id="t-ss" min="0" max="59" value="29" oninput="updTDisp()"></div>
       <div style="display:flex;flex-direction:column;gap:7px;padding-top:18px">
-        <button class="btn btn-p btn-sm" onclick="setTime()">Set Time</button>
+        <button class="btn btn-p btn-sm" onclick="setTime()">Set ESP Clock</button>
         <button class="btn btn-s btn-sm" onclick="useBrowserTime()">Browser Time</button>
       </div>
     </div>
-    <div class="send-row">
-      <button class="btn btn-s btn-sm" onclick="sendTimeOnly()">Send Time Packets Now</button>
+    <div class="send-row" style="justify-content:center;margin-top:0">
+      <button class="btn btn-p" onclick="sendTimeOnly()">Send Time Packets</button>
     </div>
   </div>
 </div>
@@ -443,61 +436,58 @@ details[open] .chev{transform:rotate(180deg)}
     <div class="sched-grid">
 
       <!-- Header row -->
-      <div style="display:grid;grid-template-columns:28px 26px 1fr 1fr;gap:8px;padding:0 4px">
-        <div></div><div></div>
+      <div style="display:grid;grid-template-columns:22px 28px 26px 1fr 1fr;gap:8px;padding:0 4px">
+        <div></div><div></div><div></div>
         <div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);text-align:center;font-weight:700">ON</div>
         <div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);text-align:center;font-weight:700">OFF</div>
       </div>
 
       <!-- White row -->
-      <div style="display:grid;grid-template-columns:28px 26px 1fr 1fr;gap:8px;align-items:center">
+      <div style="display:grid;grid-template-columns:22px 28px 26px 1fr 1fr;gap:8px;align-items:center">
+        <input type="checkbox" id="sw-en" checked onchange="schedChToggle('sw')" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer">
         <div style="width:9px;height:9px;border-radius:50%;background:#c8e0ff;margin:auto"></div>
         <span style="font-size:.75rem;font-weight:600;color:var(--bright)">W</span>
         <div class="sched-row on-row" id="sw-on">
-          <input type="checkbox" id="sw-on-en" checked onchange="schedRowToggle('sw-on')" style="accent-color:var(--green);width:14px;height:14px;cursor:pointer;flex-shrink:0">
           <span class="sched-type" style="color:var(--dim)">04</span>
-          <div class="sched-time"><input type="number" id="sw-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="number" id="sw-on-mm" min="0" max="59" value="0"></div>
+          <div class="sched-time"><input type="number" id="sw-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="text" inputmode="numeric" id="sw-on-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
         </div>
         <div class="sched-row off-row" id="sw-off">
-          <input type="checkbox" id="sw-off-en" checked onchange="schedRowToggle('sw-off')" style="accent-color:var(--orange);width:14px;height:14px;cursor:pointer;flex-shrink:0">
           <span class="sched-type" style="color:var(--dim)">03</span>
-          <div class="sched-time"><input type="number" id="sw-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="number" id="sw-off-mm" min="0" max="59" value="0"></div>
+          <div class="sched-time"><input type="number" id="sw-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="text" inputmode="numeric" id="sw-off-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
         </div>
       </div>
 
       <!-- Blue row -->
-      <div style="display:grid;grid-template-columns:28px 26px 1fr 1fr;gap:8px;align-items:center">
+      <div style="display:grid;grid-template-columns:22px 28px 26px 1fr 1fr;gap:8px;align-items:center">
+        <input type="checkbox" id="sb-en" checked onchange="schedChToggle('sb')" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer">
         <div style="width:9px;height:9px;border-radius:50%;background:#4488ff;margin:auto"></div>
         <span style="font-size:.75rem;font-weight:600;color:var(--bright)">B</span>
         <div class="sched-row on-row" id="sb-on">
-          <input type="checkbox" id="sb-on-en" checked onchange="schedRowToggle('sb-on')" style="accent-color:var(--green);width:14px;height:14px;cursor:pointer;flex-shrink:0">
           <span class="sched-type" style="color:var(--dim)">05</span>
-          <div class="sched-time"><input type="number" id="sb-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="number" id="sb-on-mm" min="0" max="59" value="0"></div>
+          <div class="sched-time"><input type="number" id="sb-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="text" inputmode="numeric" id="sb-on-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
         </div>
         <div class="sched-row off-row" id="sb-off">
-          <input type="checkbox" id="sb-off-en" checked onchange="schedRowToggle('sb-off')" style="accent-color:var(--orange);width:14px;height:14px;cursor:pointer;flex-shrink:0">
           <span class="sched-type" style="color:var(--dim)">02</span>
-          <div class="sched-time"><input type="number" id="sb-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="number" id="sb-off-mm" min="0" max="59" value="30"></div>
+          <div class="sched-time"><input type="number" id="sb-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="text" inputmode="numeric" id="sb-off-mm" value="30" onchange="padMin(this)" style="width:48px"></div>
         </div>
       </div>
 
       <!-- RGB row -->
-      <div style="display:grid;grid-template-columns:28px 26px 1fr 1fr;gap:8px;align-items:start">
+      <div style="display:grid;grid-template-columns:22px 28px 26px 1fr 1fr;gap:8px;align-items:start">
+        <input type="checkbox" id="sr-en" checked onchange="schedChToggle('sr')" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;margin-top:12px">
         <div style="width:9px;height:9px;border-radius:50%;background:conic-gradient(#ff4060,#ffd060,#00e08a,#4488ff,#ff4060);margin:auto;margin-top:12px"></div>
         <span style="font-size:.75rem;font-weight:600;color:var(--bright);margin-top:10px">RGB</span>
         <div style="display:flex;flex-direction:column;gap:5px">
           <div class="sched-row on-row" id="sr-on">
-            <input type="checkbox" id="sr-on-en" checked onchange="schedRowToggle('sr-on')" style="accent-color:var(--green);width:14px;height:14px;cursor:pointer;flex-shrink:0">
             <span class="sched-type" style="color:var(--dim)">08</span>
-            <div class="sched-time"><input type="number" id="sr-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="number" id="sr-on-mm" min="0" max="59" value="0"></div>
+            <div class="sched-time"><input type="number" id="sr-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-on-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
           </div>
           <div class="color-pills" id="sr-on-pills" style="padding:0 4px"></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <div class="sched-row off-row" id="sr-off">
-            <input type="checkbox" id="sr-off-en" checked onchange="schedRowToggle('sr-off')" style="accent-color:var(--orange);width:14px;height:14px;cursor:pointer;flex-shrink:0">
             <span class="sched-type" style="color:var(--dim)">09</span>
-            <div class="sched-time"><input type="number" id="sr-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="number" id="sr-off-mm" min="0" max="59" value="0"></div>
+            <div class="sched-time"><input type="number" id="sr-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-off-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
           </div>
         </div>
       </div>
@@ -511,7 +501,7 @@ details[open] .chev{transform:rotate(180deg)}
 
     </div><!-- /sched-grid -->
     <div class="sched-foot">
-      <span class="sched-note">RGB color is shared across ON and OFF slots (set via the ON row). Type 07 = live state at send time. Type 02 = Blue OFF (last in sequence).</span>
+      <span class="sched-note">Unchecked channels still send with time 00:00. RGB color shared across ON/OFF slots. Type 07 = live state at send time.</span>
       <button class="btn btn-o btn-sm" onclick="sendSchedule()">Send Schedule</button>
     </div>
   </div>
@@ -568,6 +558,37 @@ details[open] .chev{transform:rotate(180deg)}
         <button class="btn btn-p" onclick="sendCraft()">Send</button>
         <label><input type="checkbox" id="craft-time" checked> append time packets</label>
       </div>
+    </div>
+  </details>
+</div>
+
+<!-- Advanced Config -->
+<div class="card">
+  <details>
+    <summary>
+      <div class="card-hdr sum-row" style="border-bottom:none">
+        <span class="card-title">Advanced Config</span>
+        <span class="chev">&#9660;</span>
+      </div>
+    </summary>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div class="time-tog">
+          <span style="color:var(--text);font-size:.8rem">Burst Repeat</span>
+          <input type="number" id="tx-repeat" min="1" max="20" value="5"
+            style="width:44px;background:var(--bg);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:.85rem;text-align:center;border-radius:4px;padding:3px 2px;outline:none;-moz-appearance:textfield"
+            onchange="setRepeat(this.value)">
+          <span style="font-size:.72rem;color:var(--dim)">per packet (1–20)</span>
+        </div>
+        <div class="time-tog">
+          <span style="color:var(--text);font-size:.8rem">Append Time Packets</span>
+          <label class="sw">
+            <input type="checkbox" id="global-time" checked onchange="setGlobalTime(this.checked)">
+            <span class="sw-tr"></span>
+          </label>
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--dim)">Burst Repeat: number of times each RF packet is retransmitted per send. Increase if the fixture misses commands. Append Time: automatically include device time packets with every channel command.</p>
     </div>
   </details>
 </div>
@@ -718,9 +739,18 @@ async function sendTimeOnly(){
 }
 
 // ── Schedule ──
-function schedRowToggle(id) {
-  const en = document.getElementById(id+'-en').checked;
-  document.getElementById(id).classList.toggle('sched-inactive', !en);
+function padMin(el) {
+  const v = Math.min(59, Math.max(0, parseInt(el.value) || 0));
+  el.value = String(v).padStart(2, '0');
+}
+
+function schedChToggle(ch) {
+  const en = document.getElementById(ch+'-en').checked;
+  document.getElementById(ch+'-on').classList.toggle('sched-inactive', !en);
+  document.getElementById(ch+'-off').classList.toggle('sched-inactive', !en);
+  // For RGB, also dim the pills
+  const pills = document.getElementById(ch+'-on-pills');
+  if (pills) pills.style.opacity = en ? '' : '0.4';
 }
 
 // Single stored RGB color used for both ON and OFF schedule slots
@@ -762,22 +792,30 @@ updateSchedStatePreviews();
 function g(id) { return document.getElementById(id); }
 function slotVal(prefix) {
   return {
-    active: g(prefix+'-en').checked,
     hh: parseInt(g(prefix+'-hh').value)||0,
     mm: parseInt(g(prefix+'-mm').value)||0,
   };
 }
+function chEnabled(ch) { return g(ch+'-en').checked; }
 
 function readSched() {
-  const onState  = 0x80 | (schedRgbColor & 0x0f);   // ON  bit set
-  const offState = 0x00 | (schedRgbColor & 0x0f);   // OFF bit clear (device restores at next ON)
+  const onState  = 0x80 | (schedRgbColor & 0x0f);
+  const offState = 0x00 | (schedRgbColor & 0x0f);
+
+  function slot(ch, prefix, extra) {
+    if (chEnabled(ch)) {
+      return {active: true, ...slotVal(prefix), ...extra};
+    }
+    return {active: true, hh: 0, mm: 0, ...extra};  // disabled = 00:00, still transmitted
+  }
+
   return {
-    white_on:  slotVal('sw-on'),
-    white_off: slotVal('sw-off'),
-    blue_on:   slotVal('sb-on'),
-    blue_off:  slotVal('sb-off'),
-    rgb_on:    {...slotVal('sr-on'),  state: onState},
-    rgb_off:   {...slotVal('sr-off'), state: offState},
+    white_on:  slot('sw', 'sw-on',  {}),
+    white_off: slot('sw', 'sw-off', {}),
+    blue_on:   slot('sb', 'sb-on',  {}),
+    blue_off:  slot('sb', 'sb-off', {}),
+    rgb_on:    slot('sr', 'sr-on',  {state: onState}),
+    rgb_off:   slot('sr', 'sr-off', {state: offState}),
   };
 }
 
@@ -1032,15 +1070,23 @@ async function loadDeviceState() {
   } catch(e){}
   try {
     const sc = await api('/api/schedule','GET');
-    function fillSlot(pfx,slot){
-      document.getElementById(pfx+'-en').checked=slot.active;
-      document.getElementById(pfx+'-hh').value=slot.hh;
-      document.getElementById(pfx+'-mm').value=slot.mm;
-      schedRowToggle(pfx);
+    function fillSlot(pfx, slot) {
+      document.getElementById(pfx+'-hh').value = slot.hh;
+      document.getElementById(pfx+'-mm').value = String(slot.mm).padStart(2,'0');
     }
-    fillSlot('sw-on', sc.white_on);  fillSlot('sw-off',sc.white_off);
-    fillSlot('sb-on', sc.blue_on);   fillSlot('sb-off',sc.blue_off);
-    fillSlot('sr-on', sc.rgb_on);    fillSlot('sr-off',sc.rgb_off);
+    // Infer per-channel enable from whether the ON slot is active
+    const chEn = {
+      sw: sc.white_on.active || sc.white_off.active,
+      sb: sc.blue_on.active  || sc.blue_off.active,
+      sr: sc.rgb_on.active   || sc.rgb_off.active,
+    };
+    ['sw','sb','sr'].forEach(ch => {
+      const el = document.getElementById(ch+'-en');
+      if (el) { el.checked = chEn[ch]; schedChToggle(ch); }
+    });
+    fillSlot('sw-on', sc.white_on);  fillSlot('sw-off', sc.white_off);
+    fillSlot('sb-on', sc.blue_on);   fillSlot('sb-off', sc.blue_off);
+    fillSlot('sr-on', sc.rgb_on);    fillSlot('sr-off', sc.rgb_off);
     // Restore shared schedule color from ON slot state byte
     if(sc.rgb_on.state) {
       schedRgbColor = sc.rgb_on.state & 0x0f;
