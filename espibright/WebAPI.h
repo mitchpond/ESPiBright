@@ -67,5 +67,6 @@ private:
     void handleScheduleSet_();
     void handleScheduleSend_();
     void handleTimeGlobal_();
+    void handleRepeatSet_();
     void handleOptions_();
 };

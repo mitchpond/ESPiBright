@@ -33,9 +33,9 @@ void RFTransmitter::transmitOnce(const uint8_t* p8) {
 }
 
 void RFTransmitter::tx3(const uint8_t* p8) {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < repeatCount; i++) {
         transmitOnce(p8);
-        if (i < 2) delay(1);
+        if (i < repeatCount - 1) delay(1);
     }
 }
 
@@ -45,15 +45,12 @@ void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
 
 void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label) {
     log_.begin(label);
-    log_.addPkt(p8, "CMD x3");
+    log_.addPkt(p8, "CMD");
     tx3(p8);
 
     if (withTime && timeEnabled) {
-        for (int i = 0; i < 3; i++) {
-            transmitOnce(pktTimeHms_);
-            if (i < 2) delay(1);
-        }
-        log_.addPkt(pktTimeHms_, "HMS x3");
+        tx3(pktTimeHms_);
+        log_.addPkt(pktTimeHms_, "HMS");
     }
 
     log_.commit();
@@ -65,11 +62,8 @@ void RFTransmitter::sendTimePackets(uint8_t hh, uint8_t mm, uint8_t ss, const ch
     buildPacket(p7, pktTimeHms_);
 
     log_.begin(label);
-    for (int i = 0; i < 3; i++) {
-        transmitOnce(pktTimeHms_);
-        if (i < 2) delay(1);
-    }
-    log_.addPkt(pktTimeHms_, "HMS x3");
+    tx3(pktTimeHms_);
+    log_.addPkt(pktTimeHms_, "HMS");
     log_.commit();
     recordTx_(pktTimeHms_, label);
 }

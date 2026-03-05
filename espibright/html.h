@@ -267,6 +267,12 @@ details[open] .chev{transform:rotate(180deg)}
   <h1>ESPiBright</h1>
   <div class="hdr-r">
     <div class="time-tog">
+      <span>REPEAT</span>
+      <input type="number" id="tx-repeat" min="1" max="20" value="5"
+        style="width:36px;background:var(--bg);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:.75rem;text-align:center;border-radius:4px;padding:2px 1px;outline:none;-moz-appearance:textfield"
+        onchange="setRepeat(this.value)">
+    </div>
+    <div class="time-tog">
       <span>+TIME</span>
       <label class="sw">
         <input type="checkbox" id="global-time" checked onchange="setGlobalTime(this.checked)">
@@ -334,10 +340,9 @@ details[open] .chev{transform:rotate(180deg)}
             <span style="font-size:.72rem;color:var(--dim)">Speed</span>
             <select id="rgb-cycle" class="num" style="font-size:.72rem;padding:2px 4px;background:var(--panel2);color:var(--bright);border:1px solid var(--border);border-radius:4px;cursor:pointer" onchange="updateSchedStatePreviews()">
               <option value="1">Static</option>
-              <option value="3">3s</option>
-              <option value="5">4s</option>
-              <option value="9">5s</option>
-              <option value="17">6s?</option>
+              <option value="2">3s</option>
+              <option value="4">4s</option>
+              <option value="8">5s</option>
             </select>
           </div>
           <div class="ch-r">
@@ -347,12 +352,18 @@ details[open] .chev{transform:rotate(180deg)}
             </div>
           </div>
         </div>
+        <div class="ch-m">
+          <input type="range" min="1" max="10" value="10" id="sl-rgb" oninput="syncPct('rgb',this.value)" class="sl-r">
+          <input type="number" min="10" max="100" step="10" value="100" id="pct-rgb" class="num"
+            onchange="syncSlider('rgb',this.value)">
+          <span class="pct">%</span>
+        </div>
         <div class="color-pills" id="color-pills"></div>
       </div>
 
     </div>
     <div class="send-row">
-      <button class="btn btn-p" onclick="sendChannels()">Send ×5</button>
+      <button class="btn btn-p" onclick="sendChannels()">Send</button>
       <button class="btn btn-s btn-sm" onclick="allOff()">All Off</button>
     </div>
   </div>
@@ -448,7 +459,6 @@ details[open] .chev{transform:rotate(180deg)}
             <span class="sched-type" style="color:var(--dim)">09</span>
             <div class="sched-time"><input type="number" id="sr-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="number" id="sr-off-mm" min="0" max="59" value="0"></div>
           </div>
-          <div class="color-pills" id="sr-off-pills" style="padding:0 4px"></div>
         </div>
       </div>
 
@@ -461,7 +471,7 @@ details[open] .chev{transform:rotate(180deg)}
 
     </div><!-- /sched-grid -->
     <div class="sched-foot">
-      <span class="sched-note">RGB ON/OFF store their own color (frozen at save time), independent of live channel. Type 07 = live state. Type 02 = Blue OFF (last in sequence). Sequence x3.</span>
+      <span class="sched-note">RGB color is shared across ON and OFF slots (set via the ON row). Type 07 = live state at send time. Type 02 = Blue OFF (last in sequence).</span>
       <button class="btn btn-o btn-sm" onclick="sendSchedule()">Send Schedule</button>
     </div>
   </div>
@@ -515,7 +525,7 @@ details[open] .chev{transform:rotate(180deg)}
     <div class="card-body">
       <div class="crafter-bytes" id="crafter-bytes"></div>
       <div class="craft-opts">
-        <button class="btn btn-p" onclick="sendCraft()">Send ×5</button>
+        <button class="btn btn-p" onclick="sendCraft()">Send</button>
         <label><input type="checkbox" id="craft-time" checked> append time packets</label>
       </div>
     </div>
@@ -546,6 +556,7 @@ details[open] .chev{transform:rotate(180deg)}
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Set schedule slots.<br><code>{"off":[{"active":true,"hh":23,"mm":0},{"active":true,"hh":11,"mm":0},{"active":false,"hh":0,"mm":0}],"on":[{"active":true,"hh":11,"mm":0},{"active":true,"hh":23,"mm":0}]}</code><br>State byte for ON slots and type 07 auto-computed from current channel state.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
         </tbody>
       </table>
     </div>
@@ -667,14 +678,13 @@ async function sendTimeOnly(){
 }
 
 // ── Schedule ──
-// ── Schedule ──
 function schedRowToggle(id) {
   const en = document.getElementById(id+'-en').checked;
   document.getElementById(id).classList.toggle('sched-inactive', !en);
 }
 
-// Per-slot stored RGB state (independent of live channel)
-const schedRgbState = { 'sr-on': 0x86, 'sr-off': 0x86 };
+// Single stored RGB color used for both ON and OFF schedule slots
+let schedRgbColor = 0x08;   // color nibble (1-9); ON bit set by firmware per slot
 
 function buildSchedPills(containerId) {
   const container = document.getElementById(containerId);
@@ -685,13 +695,9 @@ function buildSchedPills(containerId) {
     btn.style.cssText = 'padding:2px 8px;font-size:.62rem';
     btn.textContent = c.label;
     btn.dataset.val = c.v;
-    const slotId = containerId.replace('-pills','');
-    const stateVal = schedRgbState[slotId] || 0x86;
-    const curColor = stateVal & 0x0f;
-    if (c.v === curColor) btn.classList.add('sel');
+    if (c.v === schedRgbColor) btn.classList.add('sel');
     btn.onclick = () => {
-      const on = (schedRgbState[slotId] & 0x80);
-      schedRgbState[slotId] = on | (c.v & 0x0f);
+      schedRgbColor = c.v;
       container.querySelectorAll('.color-pill').forEach(p => p.classList.remove('sel'));
       btn.classList.add('sel');
     };
@@ -699,7 +705,6 @@ function buildSchedPills(containerId) {
   });
 }
 buildSchedPills('sr-on-pills');
-buildSchedPills('sr-off-pills');
 
 function rgbStateByte() {
   return (CH.rgb.on ? 0x80:0x00) | (CH.rgb.color & 0x0f);
@@ -724,13 +729,15 @@ function slotVal(prefix) {
 }
 
 function readSched() {
+  const onState  = 0x80 | (schedRgbColor & 0x0f);   // ON  bit set
+  const offState = 0x00 | (schedRgbColor & 0x0f);   // OFF bit clear (device restores at next ON)
   return {
     white_on:  slotVal('sw-on'),
     white_off: slotVal('sw-off'),
     blue_on:   slotVal('sb-on'),
     blue_off:  slotVal('sb-off'),
-    rgb_on:    {...slotVal('sr-on'),  state: schedRgbState['sr-on']},
-    rgb_off:   {...slotVal('sr-off'), state: schedRgbState['sr-off']},
+    rgb_on:    {...slotVal('sr-on'),  state: onState},
+    rgb_off:   {...slotVal('sr-off'), state: offState},
   };
 }
 
@@ -739,7 +746,7 @@ async function sendSchedule(){
   const r = await api('/api/schedule/set','POST', readSched());
   if(!r.ok){toast('✗ set failed',true);return;}
   const r2 = await api('/api/schedule/send','POST',{});
-  r2.ok?toast('✓ schedule sent (×3)'):toast('✗ '+(r2.error||'error'),true);
+  r2.ok?toast('✓ schedule sent'):toast('✗ '+(r2.error||'error'),true);
 }
 
 // ── Known packets grid ──
@@ -807,6 +814,14 @@ async function setGlobalTime(v){
   toast(v?'✓ time packets ON':'✓ time packets OFF');
 }
 
+// ── Repeat count ──
+async function setRepeat(v){
+  const n=Math.min(20,Math.max(1,parseInt(v)||5));
+  document.getElementById('tx-repeat').value=n;
+  await api('/api/settings/repeat','POST',{count:n});
+  toast('✓ repeat ×'+n);
+}
+
 // ── Shared API ──
 async function api(url,method,body){
   try{
@@ -847,6 +862,8 @@ async function poll(){
     }
     if(typeof j.send_time_global!=='undefined')
       document.getElementById('global-time').checked=j.send_time_global;
+    if(typeof j.repeat_count!=='undefined')
+      document.getElementById('tx-repeat').value=j.repeat_count;
   }catch(_){}
 }
 poll();setInterval(poll,10000);
@@ -984,13 +1001,12 @@ async function loadDeviceState() {
     fillSlot('sw-on', sc.white_on);  fillSlot('sw-off',sc.white_off);
     fillSlot('sb-on', sc.blue_on);   fillSlot('sb-off',sc.blue_off);
     fillSlot('sr-on', sc.rgb_on);    fillSlot('sr-off',sc.rgb_off);
-    if(sc.rgb_on.state)  schedRgbState['sr-on']  = sc.rgb_on.state;
-    if(sc.rgb_off.state) schedRgbState['sr-off'] = sc.rgb_off.state;
-    ['sr-on-pills','sr-off-pills'].forEach(id=>{
-      const c=document.getElementById(id); if(!c) return;
-      const cur=schedRgbState[id.replace('-pills','')]&0x0f;
-      c.querySelectorAll('.color-pill').forEach(p=>p.classList.toggle('sel',parseInt(p.dataset.val)===cur));
-    });
+    // Restore shared schedule color from ON slot state byte
+    if(sc.rgb_on.state) {
+      schedRgbColor = sc.rgb_on.state & 0x0f;
+      const c=document.getElementById('sr-on-pills'); if(c)
+        c.querySelectorAll('.color-pill').forEach(p=>p.classList.toggle('sel',parseInt(p.dataset.val)===schedRgbColor));
+    }
   } catch(e){}
 }
 loadDeviceState();

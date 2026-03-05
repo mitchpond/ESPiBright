@@ -47,7 +47,7 @@ const char* Display::speedLabel(uint8_t cyc) {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 void Display::begin() {
-    D.setRotation(1);
+    D.setRotation(3);
     D.setBrightness(180);
     D.setFont(&fonts::Font0);
     dirty_ = true;
@@ -128,7 +128,7 @@ void Display::checkOrientation_() {
     bool wantLandscape = (fabsf(ay) > fabsf(ax)) || (fabsf(ay) > 0.5f);
     if (wantLandscape != landscape_) {
         landscape_ = wantLandscape;
-        D.setRotation(landscape_ ? 1 : 0);
+        D.setRotation(landscape_ ? 3 : 2);
         dirty_ = true;
     }
 }

@@ -2,7 +2,7 @@
 
 **WiFi bridge for OptiBright RF aquarium lights**
 
-ESPiBright turns an M5StickC Plus2 (ESP32-C6) into a WiFi-accessible
+ESPiBright turns an Arduino Nesso N1 (ESP32-C6) into a WiFi-accessible
 controller for OptiBright LED aquarium fixtures. The original remote sends
 short-range 433 MHz OOK packets; ESPiBright reverse-engineers and replays
 that protocol over RF while exposing a clean web UI and REST API from
@@ -19,6 +19,8 @@ anywhere on your local network.
 - **Schedule programming** — per-channel on/off times sent directly to the
   fixture's internal scheduler
 - **Device clock sync** — set the fixture's internal clock over WiFi
+- **Configurable repeat count** — burst repeat count adjustable in the UI
+  and via API to compensate for RF interference (`TX_REPEAT` in `config.h`)
 - **Persistent state** — channel state and schedule survive reboots via ESP32
   NVS (non-volatile storage)
 - **On-device display** — 3-page UI on the built-in TFT; auto-rotates using
@@ -39,21 +41,27 @@ anywhere on your local network.
 
 | Component | Part |
 |-----------|------|
-| MCU / display | M5StickC Plus2 (ESP32-C6, 1.14" TFT, IMU, LiPo) |
+| MCU / display | Arduino Nesso N1 (ESP32-C6, 1.14" TFT, IMU, LiPo) |
 | RF transmitter | 433 MHz OOK module on GPIO 2 |
 | Target fixture | OptiBright LED aquarium light (433 MHz RF remote) |
 
 The TX pin is defined in `config.h` (`TX_PIN`, default GPIO 2). The RF
 module should be a simple OOK transmitter; no specific module is required.
 
+**Compatibility:** The code targets the Arduino Nesso N1. It should be
+compatible with the M5StickC Plus / Plus2 and similar M5Stack devices that
+use M5Unified, though display rotation (`config.h`) may need adjustment.
+
 ---
 
 ## Buttons
 
+The Nesso N1 has two buttons:
+
 | Button | Action |
 |--------|--------|
-| **A** (green face button) | Context action for current page: send channels / send schedule / sync time. Hold on System page = reboot. |
-| **B** (side button) | Cycle through pages |
+| **Face button** (front of device) | Context action for current page: send channels / send schedule / sync time. Hold on System page = reboot. |
+| **Side button** | Cycle through display pages |
 
 ---
 
@@ -61,15 +69,15 @@ module should be a simple OOK transmitter; no specific module is required.
 
 ### Live
 Shows current state of all three channels with level bars and on/off status.
-Send button pushes the current state to the fixture.
+Face button sends the current channel state to the fixture.
 
 ### Schedule
 Shows all six schedule slots (white on/off, blue on/off, RGB on/off) with
-their times. Send button transmits the full schedule sequence to the fixture.
+their times. Face button transmits the full schedule sequence to the fixture.
 
 ### System
-Shows WiFi status, IP address, RSSI, firmware info, and uptime.
-Sync button pushes the current device time to the fixture.
+Shows WiFi status, IP address, RSSI, battery level, and uptime.
+Face button pushes the current device time to the fixture.
 
 ---
 
@@ -82,12 +90,15 @@ current channel state, schedule, and device time automatically on page load.
 ### Sections
 
 - **Channels** — live sliders and on/off toggles for all three channels;
-  RGB colour pills; Rainbow duration selector (visible for Rainbow only)
+  RGB colour pills; Rainbow duration selector (Rainbow only)
 - **Device Time** — set and transmit the fixture clock
-- **Schedule** — configure all six on/off slots with RGB colour state
+- **Schedule** — configure all six on/off slots; RGB color shared across
+  ON and OFF slots (set once on the ON row)
 - **Known Packets** — one-click buttons for common preset commands
 - **Packet Crafter** — manual hex packet builder with live CRC
 - **TX Log** — recent transmissions with hex dumps, auto-polls every 1.5s
+- **Header controls** — `REPEAT` (burst count, 1–20) and `+TIME` (append
+  time packets to channel commands) are always visible in the header
 
 ---
 
@@ -97,7 +108,7 @@ All endpoints return JSON. Base URL: `http://espibright.local` (or `.lan`, or by
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET`  | `/api/status` | Device status, uptime, WiFi, time |
+| `GET`  | `/api/status` | Device status, uptime, WiFi, time, repeat count |
 | `GET`  | `/api/channels` | Current channel state |
 | `GET`  | `/api/schedule` | Current schedule slots |
 | `GET`  | `/api/packets` | Known packet list |
@@ -110,6 +121,7 @@ All endpoints return JSON. Base URL: `http://espibright.local` (or `.lan`, or by
 | `POST` | `/api/schedule/set` | Set schedule slots |
 | `POST` | `/api/schedule/send` | Transmit schedule |
 | `POST` | `/api/settings/time_global` | Toggle auto time-with-channels |
+| `POST` | `/api/settings/repeat` | Set burst repeat count (1–20) |
 
 **Send channels example:**
 ```json
@@ -155,8 +167,9 @@ Edit `config.h` before flashing:
 ```cpp
 #define WIFI_SSID   "your-network"
 #define WIFI_PASS   "your-password"
-#define HOSTNAME    "ESPiBright"      // mDNS name (.local appended)
+#define HOSTNAME    "ESPiBright"      // mDNS name (no suffix — appended by router)
 #define TX_PIN      GPIO_NUM_2        // 433 MHz OOK transmitter data pin
+#define TX_REPEAT   5                 // burst repeat count; increase for poor RF
 ```
 
 ---
@@ -169,7 +182,8 @@ Edit `config.h` before flashing:
    - **M5Unified** (M5Stack)
    - **ArduinoJson** (Benoit Blanchon, v7)
 4. Open `espibright.ino` — Arduino IDE will pick up all files in the folder
-5. Select board: **M5Stick-C-Plus2** (or your ESP32-C6 variant)
+5. Select board: **Arduino Nesso N1** (or compatible ESP32-C6 variant;
+   M5StickC Plus2 also works but may require rotation adjustment in `config.h`)
 6. Flash
 
 ---
@@ -193,6 +207,7 @@ questions.
 
 | Version | Notes |
 |---------|-------|
+| 0.6 | RGB level slider, unified schedule RGB color, configurable repeat count, display rotation fix for Nesso N1, hardware docs updated. |
 | 0.5 | Initial release. Modular refactor from monolithic sketch. Full web UI, REST API, NVS persistence, IMU orientation, schedule support. |
 
 ---

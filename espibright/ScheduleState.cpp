@@ -38,7 +38,7 @@ void ScheduleState::send() {
     buildSlotPkt_   (pkts[6], blueOff, 0x02);
 
     rf_.log().begin("SCHEDULE");
-    for (int rep = 0; rep < 3; rep++)
+    for (int rep = 0; rep < rf_.repeatCount; rep++)
         for (int i = 0; i < 7; i++)
             rf_.transmitOnce(pkts[i]);
     for (int i = 0; i < 7; i++)

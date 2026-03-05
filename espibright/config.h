@@ -12,11 +12,14 @@
 #define LONG_GAP_US  1008
 #define RESET_GAP_US 6000
 #define MAX_SYMBOLS  (2 + 64 + 1)
+// Number of times each packet burst is repeated per send.
+// Increase if the fixture misses commands due to RF interference.
+#define TX_REPEAT    5
 
 // ── Display ───────────────────────────────────────────────────────────────────
-// Screen dimensions — M5StickC Plus2
-// Landscape (rotation 1, normal): 240w × 135h
-// Portrait  (rotation 0, tilted): 135w × 240h
+// Target hardware: Arduino Nesso N1 (ESP32-C6, 1.14" TFT, IMU, LiPo)
+// Landscape (rotation 3, normal): 240w × 135h
+// Portrait  (rotation 2, tilted): 135w × 240h
 // Drawing code uses D.width()/D.height() at runtime, not these constants.
 // These are only kept as reference / for anything that must be compile-time.
 #define SCR_W_LS     240   // landscape width

@@ -78,6 +78,7 @@ void WebAPI::begin() {
     server_.on("/api/schedule/set",        HTTP_POST, [this](){ handleScheduleSet_(); });
     server_.on("/api/schedule/send",       HTTP_POST, [this](){ handleScheduleSend_(); });
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
+    server_.on("/api/settings/repeat",     HTTP_POST, [this](){ handleRepeatSet_(); });
     server_.onNotFound([this](){
         server_.send(404, "application/json", "{\"error\":\"not found\"}");
     });
@@ -86,7 +87,7 @@ void WebAPI::begin() {
         "/api/send/index", "/api/send/raw", "/api/send/channels",
         "/api/time/set", "/api/time/send",
         "/api/schedule/set", "/api/schedule/send",
-        "/api/settings/time_global"
+        "/api/settings/time_global", "/api/settings/repeat"
     };
     for (auto r : corsPaths)
         server_.on(r, HTTP_OPTIONS, [this](){ handleOptions_(); });
@@ -127,6 +128,7 @@ void WebAPI::handleApiStatus_() {
              + ",\"hex\":\""    + String(rf_.lastHex)   + "\""
              + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))
              + ",\"send_time_global\":" + (rf_.timeEnabled ? "true" : "false")
+             + ",\"repeat_count\":"    + rf_.repeatCount
              + ",\"time\":{\"hh\":" + clock_.hh
              + ",\"mm\":"           + clock_.mm
              + ",\"ss\":"           + clock_.ss + "}}";
@@ -318,6 +320,19 @@ void WebAPI::handleTimeGlobal_() {
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
     rf_.timeEnabled = doc["enabled"] | rf_.timeEnabled;
+    server_.send(200, "application/json", JSON_OK);
+}
+
+void WebAPI::handleRepeatSet_() {
+    sendCors_();
+    JsonDocument doc;
+    if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+    int n = doc["count"] | -1;
+    if (n < 1 || n > 20) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"count must be 1-20\"}");
+        return;
+    }
+    rf_.repeatCount = n;
     server_.send(200, "application/json", JSON_OK);
 }
 

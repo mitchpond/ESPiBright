@@ -38,6 +38,7 @@ public:
     const uint8_t* crcTable() const { return crcTable_; }
 
     bool timeEnabled = true;   // global +TIME toggle
+    int  repeatCount = TX_REPEAT; // burst repeat count (set via API or config)
 
     // Last TX info (read by WebAPI / Display)
     char          lastLabel[48] = "none";
