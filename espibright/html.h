@@ -156,7 +156,6 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 #time-display{font-family:var(--mono);font-size:1.6rem;color:var(--bright);letter-spacing:.08em}
 
 /* Schedule */
-/* Schedule */
 .sched-grid{display:flex;flex-direction:column;gap:18px}
 .sched-group{display:flex;flex-direction:column;gap:8px}
 .sched-group-title{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:2px}
@@ -171,27 +170,22 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .sched-row.enabled{border-left:3px solid var(--border2)}
 .sched-row.enabled.off-row{border-left-color:var(--orange)}
 .sched-row.enabled.on-row {border-left-color:var(--green)}
-.sched-type{font-family:var(--mono);font-size:.65rem;color:var(--dim);width:54px;flex-shrink:0}
-.sched-time{display:flex;align-items:center;gap:5px}
+.sched-type{font-family:var(--mono);font-size:.65rem;color:var(--dim);width:26px;flex-shrink:0}
+.sched-time{display:flex;align-items:center;gap:5px;flex:1;justify-content:center}
 .sched-time input{
-  width:48px;background:var(--bg);border:1px solid var(--border);
+  width:44px;background:var(--bg);border:1px solid var(--border);
   color:var(--bright);font-family:var(--mono);font-size:.9rem;text-align:center;
-  border-radius:4px;padding:5px;outline:none;-moz-appearance:textfield;
+  border-radius:4px;padding:5px 2px;outline:none;-moz-appearance:textfield;
 }
 .sched-time input::-webkit-inner-spin-button{-webkit-appearance:none}
 .sched-time input:focus{border-color:var(--accent)}
 .sched-time .sep{font-family:var(--mono);color:var(--dim);font-size:.9rem}
-.sched-inactive{opacity:.4}
-.sched-foot{display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.sched-inactive{opacity:.4;pointer-events:none}
+.sched-foot{display:flex;gap:10px;margin-top:14px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 .sched-note{font-size:.7rem;color:var(--dim);flex:1}
 .badge{font-family:var(--mono);font-size:.66rem;padding:2px 7px;border-radius:3px;font-weight:700}
 .b-on{background:#0a2018;color:var(--green)}
 .b-off{background:#1a1008;color:var(--orange)}
-.state-preview{
-  font-family:var(--mono);font-size:.65rem;color:var(--dim);
-  background:var(--bg);border:1px solid var(--border);border-radius:4px;
-  padding:3px 8px;white-space:nowrap;
-}
 
 
 /* Known packets */
@@ -365,38 +359,39 @@ details[open] .chev{transform:rotate(180deg)}
         </div>
       </div>
 
-      <div class="channel" id="ch-rgb" style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="ch-l"><div class="dot r"></div><span class="ch-name">RGB</span></div>
-          <div style="flex:1;display:flex;align-items:center;gap:9px">
-            <span style="font-size:.72rem;color:var(--dim)">Speed</span>
-            <select id="rgb-cycle" class="num" style="font-size:.72rem;padding:2px 4px;min-width:62px;background:var(--panel2);color:var(--bright);border:1px solid var(--border);border-radius:4px;cursor:pointer" onchange="updateSchedStatePreviews()">
-              <option value="1">Static</option>
-              <option value="2">3s</option>
-              <option value="4">4s</option>
-              <option value="8">5s</option>
-            </select>
-          </div>
-          <div class="ch-r">
-            <div class="tog-btn">
-              <button class="on a" onclick="setCh('rgb',true)">ON</button>
-              <button class="off"  onclick="setCh('rgb',false)">OFF</button>
-            </div>
-          </div>
-        </div>
+      <div class="channel" id="ch-rgb" style="display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;flex-direction:unset">
+        <div class="ch-l"><div class="dot r"></div><span class="ch-name">RGB</span></div>
         <div class="ch-m">
           <input type="range" min="1" max="10" value="10" id="sl-rgb" oninput="syncPct('rgb',this.value)" class="sl-r">
           <input type="number" min="10" max="100" step="10" value="100" id="pct-rgb" class="num"
             onchange="syncSlider('rgb',this.value)">
           <span class="pct">%</span>
         </div>
-        <div class="color-pills" id="color-pills"></div>
+        <div class="ch-r">
+          <div class="tog-btn">
+            <button class="on a" onclick="setCh('rgb',true)">ON</button>
+            <button class="off"  onclick="setCh('rgb',false)">OFF</button>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:2px">
+          <div class="color-pills" id="color-pills" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <span style="font-size:.7rem;color:var(--dim)">Speed</span>
+            <select id="rgb-cycle" class="num" style="font-size:.72rem;padding:3px 5px;min-width:66px;background:var(--panel2);color:var(--bright);border:1px solid var(--border);border-radius:4px;cursor:pointer">
+              <option value="1">Static</option>
+              <option value="2">3 s</option>
+              <option value="4">4 s</option>
+              <option value="8">5 s</option>
+            </select>
+          </div>
+        </div>
       </div>
 
     </div>
     <div class="send-row">
       <button class="btn btn-p" onclick="sendChannels()">Send</button>
-      <button class="btn btn-s btn-sm" onclick="allOff()">All Off</button>
+      <button class="btn btn-s btn-sm" onclick="quickAllOn()">All On</button>
+      <button class="btn btn-s btn-sm" onclick="quickAllOff()">All Off</button>
     </div>
   </div>
 </div>
@@ -408,7 +403,7 @@ details[open] .chev{transform:rotate(180deg)}
     <span id="time-display">--:--:--</span>
   </div>
   <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:16px">
-    <span style="font-size:.68rem;color:var(--dim);text-align:center">Sets the time on the ESPiBright controller, not the fixture directly. Use "Send Time Packets" to push the time to the fixture.</span>
+    <span style="font-size:.68rem;color:var(--dim);text-align:center">Sets the time on the ESPiBright controller, not the fixture directly. Use "Send Time" to push the time to the fixture.</span>
     <div class="time-grid" style="justify-content:center">
       <div class="tf"><label>Hour</label><input type="number" id="t-hh" min="0" max="23" value="19" oninput="updTDisp()"></div>
       <span class="tsep">:</span>
@@ -421,7 +416,7 @@ details[open] .chev{transform:rotate(180deg)}
       </div>
     </div>
     <div class="send-row" style="justify-content:center;margin-top:0">
-      <button class="btn btn-p" onclick="sendTimeOnly()">Send Time Packets</button>
+      <button class="btn btn-p" onclick="sendTimeOnly()">Send Time</button>
     </div>
   </div>
 </div>
@@ -430,7 +425,6 @@ details[open] .chev{transform:rotate(180deg)}
 <div class="card">
   <div class="card-hdr">
     <span class="card-title">Schedule Builder</span>
-    <span style="font-size:.65rem;color:var(--dim)">sequence ×3 per send</span>
   </div>
   <div class="card-body">
     <div class="sched-grid">
@@ -477,32 +471,23 @@ details[open] .chev{transform:rotate(180deg)}
         <input type="checkbox" id="sr-en" checked onchange="schedChToggle('sr')" style="accent-color:var(--accent);width:14px;height:14px;cursor:pointer;margin-top:12px">
         <div style="width:9px;height:9px;border-radius:50%;background:conic-gradient(#ff4060,#ffd060,#00e08a,#4488ff,#ff4060);margin:auto;margin-top:12px"></div>
         <span style="font-size:.75rem;font-weight:600;color:var(--bright);margin-top:10px">RGB</span>
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="sched-row on-row" id="sr-on">
-            <span class="sched-type" style="color:var(--dim)">08</span>
-            <div class="sched-time"><input type="number" id="sr-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-on-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
-          </div>
-          <div class="color-pills" id="sr-on-pills" style="padding:0 4px"></div>
+        <div class="sched-row on-row" id="sr-on">
+          <span class="sched-type" style="color:var(--dim)">08</span>
+          <div class="sched-time"><input type="number" id="sr-on-hh" min="0" max="23" value="11"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-on-mm" value="00" onchange="padMin(this)" style="width:44px"></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="sched-row off-row" id="sr-off">
-            <span class="sched-type" style="color:var(--dim)">09</span>
-            <div class="sched-time"><input type="number" id="sr-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-off-mm" value="00" onchange="padMin(this)" style="width:48px"></div>
-          </div>
+        <div class="sched-row off-row" id="sr-off">
+          <span class="sched-type" style="color:var(--dim)">09</span>
+          <div class="sched-time"><input type="number" id="sr-off-hh" min="0" max="23" value="23"><span class="sep">:</span><input type="text" inputmode="numeric" id="sr-off-mm" value="00" onchange="padMin(this)" style="width:44px"></div>
         </div>
-      </div>
-
-      <!-- Type 07 state preview -->
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--rs)">
-        <span class="sched-type" style="color:var(--purple)">07</span>
-        <span class="state-preview" id="sched-state-preview">B3 = 0x86</span>
-        <span style="font-size:.68rem;color:var(--dim)">live broadcast — auto from current RGB channel, not stored</span>
+        <div style="grid-column:3/-1;padding:4px 0 0 0">
+          <div class="color-pills" id="sr-on-pills"></div>
+        </div>
       </div>
 
     </div><!-- /sched-grid -->
     <div class="sched-foot">
-      <span class="sched-note">Unchecked channels still send with time 00:00. RGB color shared across ON/OFF slots. Type 07 = live state at send time.</span>
-      <button class="btn btn-o btn-sm" onclick="sendSchedule()">Send Schedule</button>
+      <span class="sched-note">Unchecked channels still send with time 00:00. RGB color shared across ON/OFF slots.</span>
+      <button class="btn btn-p btn-sm" onclick="sendSchedule()">Send Schedule</button>
     </div>
   </div>
 </div>
@@ -654,7 +639,7 @@ function setCh(ch,on){
   el.querySelectorAll('.tog-btn button').forEach(b=>{
     b.classList.toggle('a',b.classList.contains(on?'on':'off'));
   });
-  if(ch==='rgb') updateSchedStatePreviews();
+  if(ch==='rgb') updateRgbDurationRow();
 }
 
 // ── RGB color pills ──
@@ -680,15 +665,15 @@ RGB_COLORS.forEach(c => {
     CH.rgb.color = c.v;
     pillContainer.querySelectorAll('.color-pill').forEach(p => p.classList.remove('sel'));
     btn.classList.add('sel');
-    updateSchedStatePreviews();
+    updateRgbDurationRow();
   };
   pillContainer.appendChild(btn);
 });
 
 function updateRgbDurationRow(){
   const isRainbow = CH.rgb.color === 9;
-  const row = document.getElementById('rgb-cycle-row');
-  if(row) row.style.display = isRainbow ? 'flex' : 'none';
+  const sel = document.getElementById('rgb-cycle');
+  if(sel) sel.parentElement.style.visibility = isRainbow ? 'visible' : 'hidden';
   if(!isRainbow) CH.rgb.cycle = 1;
 }
 
@@ -705,7 +690,11 @@ async function sendChannels(){
   });
   r.ok?toast('✓ channels sent'):toast('✗ '+(r.error||'error'),true);
 }
-async function allOff(){
+async function quickAllOn(){
+  ['white','blue','rgb'].forEach(c=>setCh(c,true));
+  await sendChannels();
+}
+async function quickAllOff(){
   ['white','blue','rgb'].forEach(c=>setCh(c,false));
   await sendChannels();
 }
@@ -720,9 +709,9 @@ function updTDisp(){
 }
 function useBrowserTime(){
   const n=new Date();
-  document.getElementById('t-hh').value=n.getHours();
-  document.getElementById('t-mm').value=n.getMinutes();
-  document.getElementById('t-ss').value=n.getSeconds();
+  document.getElementById('t-hh').value=String(n.getHours()).padStart(2,'0');
+  document.getElementById('t-mm').value=String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('t-ss').value=String(n.getSeconds()).padStart(2,'0');
   updTDisp();
 }
 async function setTime(){
@@ -776,19 +765,6 @@ function buildSchedPills(containerId) {
 }
 buildSchedPills('sr-on-pills');
 
-function rgbStateByte() {
-  return (CH.rgb.on ? 0x80:0x00) | (CH.rgb.color & 0x0f);
-}
-
-function updateSchedStatePreviews() {
-  const b = rgbStateByte();
-  const hex = '0x'+b.toString(16).padStart(2,'0').toUpperCase();
-  const colors={1:'blue',2:'green',3:'white',4:'red',5:'orange',6:'purple',7:'pink',8:'yellow',9:'rainbow'};
-  const el = document.getElementById('sched-state-preview');
-  if(el) el.textContent = 'B3 = '+hex+' (RGB '+(CH.rgb.on?'on, '+(colors[CH.rgb.color]||'?'):'off')+') — live';
-}
-updateSchedStatePreviews();
-
 function g(id) { return document.getElementById(id); }
 function slotVal(prefix) {
   return {
@@ -806,7 +782,7 @@ function readSched() {
     if (chEnabled(ch)) {
       return {active: true, ...slotVal(prefix), ...extra};
     }
-    return {active: true, hh: 0, mm: 0, ...extra};  // disabled = 00:00, still transmitted
+    return {active: true, hh: 0, mm: 0, ...extra};
   }
 
   return {
@@ -820,7 +796,6 @@ function readSched() {
 }
 
 async function sendSchedule(){
-  updateSchedStatePreviews();
   const r = await api('/api/schedule/set','POST', readSched());
   if(!r.ok){toast('✗ set failed',true);return;}
   const r2 = await api('/api/schedule/send','POST',{});
@@ -1039,9 +1014,9 @@ async function loadDeviceState() {
   try {
     const s = await api('/api/status','GET');
     if(s.time){
-      document.getElementById('t-hh').value = s.time.hh;
-      document.getElementById('t-mm').value = s.time.mm;
-      document.getElementById('t-ss').value = s.time.ss;
+      document.getElementById('t-hh').value = String(s.time.hh).padStart(2,'0');
+      document.getElementById('t-mm').value = String(s.time.mm).padStart(2,'0');
+      document.getElementById('t-ss').value = String(s.time.ss).padStart(2,'0');
       updTDisp();
     }
   } catch(e){}
@@ -1066,12 +1041,11 @@ async function loadDeviceState() {
     CH.rgb.cycle=ch.rgb_cycle;
     if(ch.rgb_cycle>1){ const sel=document.getElementById('rgb-cycle'); if(sel) sel.value=ch.rgb_cycle; }
     updateRgbDurationRow();
-    updateSchedStatePreviews();
   } catch(e){}
   try {
     const sc = await api('/api/schedule','GET');
     function fillSlot(pfx, slot) {
-      document.getElementById(pfx+'-hh').value = slot.hh;
+      document.getElementById(pfx+'-hh').value = String(slot.hh).padStart(2,'0');
       document.getElementById(pfx+'-mm').value = String(slot.mm).padStart(2,'0');
     }
     // Infer per-channel enable from whether the ON slot is active
