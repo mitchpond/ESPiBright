@@ -125,10 +125,13 @@ void Display::update() {
 void Display::checkOrientation_() {
     float ax, ay, az;
     if (!M5.Imu.getAccel(&ax, &ay, &az)) return;
-    bool wantLandscape = (fabsf(ay) > fabsf(ax)) || (fabsf(ay) > 0.5f);
-    if (wantLandscape != landscape_) {
+    bool wantLandscape = fabsf(ay) > fabsf(ax);
+    // Rotation: landscape ay>0→3, ay<0→1; portrait ax>0→2, ax<0→0
+    uint8_t wantRotation = wantLandscape ? (ay > 0 ? 3 : 1) : (ax > 0 ? 2 : 0);
+    if (wantRotation != rotation_) {
+        rotation_  = wantRotation;
         landscape_ = wantLandscape;
-        D.setRotation(landscape_ ? 3 : 2);
+        D.setRotation(wantRotation);
         dirty_ = true;
     }
 }
