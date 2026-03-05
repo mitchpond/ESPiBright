@@ -1,8 +1,8 @@
 #pragma once
 
 // ── WiFi ──────────────────────────────────────────────────────────────────────
-#define WIFI_SSID    "WIFISSID"
-#define WIFI_PASS    "WIFIPASS"
+#define WIFI_SSID    "dd-wrt_vap"
+#define WIFI_PASS    "wireless"
 #define HOSTNAME     "ESPiBright"
 
 // ── RF TX ─────────────────────────────────────────────────────────────────────

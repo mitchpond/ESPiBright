@@ -169,7 +169,7 @@ void WebAPI::handleApiSchedule_() {
     server_.send(200, "application/json", j);
 }
 
-
+void WebAPI::handleApiLog_() {
     sendCors_();
     int since = server_.hasArg("since") ? server_.arg("since").toInt() : 0;
     int total = log_.available();

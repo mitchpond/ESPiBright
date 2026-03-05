@@ -87,13 +87,17 @@ private:
         snprintf(k, sizeof(k), "%s_m", pfx); s.mm     = p.getUChar(k, s.mm);
     }
     void saveRgbSlot(Preferences& p, const char* pfx, const SchedRgbSlot& s) {
-        saveSlot(p, pfx, s);
         char k[8];
+        snprintf(k, sizeof(k), "%s_a", pfx); p.putBool (k, s.active);
+        snprintf(k, sizeof(k), "%s_h", pfx); p.putUChar(k, s.hh);
+        snprintf(k, sizeof(k), "%s_m", pfx); p.putUChar(k, s.mm);
         snprintf(k, sizeof(k), "%s_s", pfx); p.putUChar(k, s.state);
     }
     void loadRgbSlot(Preferences& p, const char* pfx, SchedRgbSlot& s) {
-        loadSlot(p, pfx, s);
         char k[8];
-        snprintf(k, sizeof(k), "%s_s", pfx); s.state = p.getUChar(k, s.state);
+        snprintf(k, sizeof(k), "%s_a", pfx); s.active = p.getBool (k, s.active);
+        snprintf(k, sizeof(k), "%s_h", pfx); s.hh     = p.getUChar(k, s.hh);
+        snprintf(k, sizeof(k), "%s_m", pfx); s.mm     = p.getUChar(k, s.mm);
+        snprintf(k, sizeof(k), "%s_s", pfx); s.state  = p.getUChar(k, s.state);
     }
 };
