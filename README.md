@@ -26,7 +26,7 @@ anywhere on your local network.
 - **On-device display** — 3-page UI on the built-in TFT; auto-rotates using
   the IMU
 - **Web UI** — dark-theme responsive interface served from PROGMEM; no
-  internet connection required
+  internet connection required. [Demo Web UI here](https://mitchpond.github.io/ESPiBright/)
 - **REST API** — all functions exposed as JSON endpoints for home automation
   integration
 - **TX log** — rolling log of recent transmissions viewable in the web UI
