@@ -7,6 +7,14 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ESPiBright</title>
+<script>
+// Set theme before CSS loads to avoid flash of wrong theme
+(function(){
+  var t=localStorage.getItem('theme');
+  if(!t) t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
 :root{
@@ -16,6 +24,33 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
   --text:#b8c8dc;--bright:#e8f0f8;--dim:#4a5870;
   --mono:'JetBrains Mono',monospace;--sans:'DM Sans',sans-serif;
   --r:8px;--rs:5px;
+  --pill-bg:#0a1f14;--pill-border:#00e08a33;
+  --pkt-hover-bg:#0a1a22;
+  --term-bg:#020507;--term-track:#020507;--term-thumb:#1c2330;
+  --term-fg:#b8c8dc;--term-bright:#e8f0f8;--term-dim:#4a5870;--term-accent:#00d4ff;
+  --hdr-title:#fff;
+}
+[data-theme="light"]{
+  --bg:#f0f4f8;--panel:#ffffff;--panel2:#f4f7fb;
+  --border:#dde5ef;--border2:#c6d2e2;
+  --accent:#0094b8;--orange:#d4531a;--green:#008858;--purple:#6e38c8;--yellow:#9a6600;
+  --text:#3a4e66;--bright:#111d2b;--dim:#7a90a8;
+  --pill-bg:#d8f0e8;--pill-border:#00885844;
+  --pkt-hover-bg:#e4f0f8;
+  --term-bg:#141920;--term-track:#0f1318;--term-thumb:#253040;
+  --hdr-title:#111d2b;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f0f4f8;--panel:#ffffff;--panel2:#f4f7fb;
+    --border:#dde5ef;--border2:#c6d2e2;
+    --accent:#0094b8;--orange:#d4531a;--green:#008858;--purple:#6e38c8;--yellow:#9a6600;
+    --text:#3a4e66;--bright:#111d2b;--dim:#7a90a8;
+    --pill-bg:#d8f0e8;--pill-border:#00885844;
+    --pkt-hover-bg:#e4f0f8;
+    --term-bg:#141920;--term-track:#0f1318;--term-thumb:#253040;
+    --hdr-title:#111d2b;
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding-bottom:80px}
@@ -29,10 +64,10 @@ header{background:var(--panel);border-bottom:1px solid var(--border);padding:13p
 .logo{width:30px;height:30px;border:2px solid var(--accent);border-radius:5px;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:13px;color:var(--accent);flex-shrink:0}
-header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;flex:1}
+header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title);flex:1}
 .hdr-r{display:flex;align-items:center;gap:10px}
 .pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
-  background:#0a1f14;color:var(--green);border:1px solid #00e08a33;white-space:nowrap}
+  background:var(--pill-bg);color:var(--green);border:1px solid var(--pill-border);white-space:nowrap}
 .time-tog{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--dim)}
 .sw{position:relative;width:34px;height:19px;cursor:pointer}
 .sw input{opacity:0;width:0;height:0}
@@ -41,6 +76,10 @@ header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:up
   background:#fff;border-radius:50%;transition:.18s}
 .sw input:checked+.sw-tr{background:var(--accent)}
 .sw input:checked+.sw-tr:before{transform:translateX(15px)}
+.theme-btn{background:none;border:1px solid var(--border2);border-radius:6px;
+  cursor:pointer;padding:3px 7px;font-size:.8rem;color:var(--dim);line-height:1;
+  transition:border-color .15s,color .15s}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* Layout */
 main{max-width:940px;margin:0 auto;padding:22px 18px;display:flex;flex-direction:column;gap:24px}
@@ -161,7 +200,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .pkt-btn{background:var(--panel2);border:1px solid var(--border);color:var(--text);
   font-family:var(--sans);font-size:.76rem;font-weight:600;padding:8px 13px;border-radius:var(--rs);
   cursor:pointer;transition:border-color .12s,background .12s,transform .1s;position:relative;overflow:hidden}
-.pkt-btn:hover{border-color:var(--accent);background:#0a1a22}
+.pkt-btn:hover{border-color:var(--accent);background:var(--pkt-hover-bg)}
 .pkt-btn:active{transform:scale(.96)}
 .pkt-btn.firing{border-color:var(--accent);animation:pulse .4s ease}
 .pkt-btn .tbadge{position:absolute;top:3px;right:4px;font-size:.46rem;color:var(--orange);font-family:var(--mono)}
@@ -187,27 +226,27 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .craft-opts input[type=checkbox]{accent-color:var(--orange)}
 
 /* Terminal log */
-.terminal{background:#020507;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.term-hdr{padding:10px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.terminal{background:var(--term-bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;color:var(--term-fg)}
+.term-hdr{padding:10px 15px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;color:var(--term-dim)}
 .term-dots{display:flex;gap:5px}
 .term-dot{width:9px;height:9px;border-radius:50%}
 .term-body{height:280px;overflow-y:auto;padding:10px 14px;font-family:var(--mono);font-size:.72rem;
   line-height:1.6;scroll-behavior:smooth}
 .term-body::-webkit-scrollbar{width:4px}
-.term-body::-webkit-scrollbar-track{background:#020507}
-.term-body::-webkit-scrollbar-thumb{background:#1c2330;border-radius:2px}
+.term-body::-webkit-scrollbar-track{background:var(--term-track)}
+.term-body::-webkit-scrollbar-thumb{background:var(--term-thumb);border-radius:2px}
 .log-entry{margin-bottom:10px;border-left:2px solid var(--border2);padding-left:10px}
-.log-entry:last-child{border-left-color:var(--accent)}
-.log-ts{color:var(--dim);font-size:.62rem}
-.log-label{color:var(--bright);font-weight:700;margin-left:8px}
+.log-entry:last-child{border-left-color:var(--term-accent)}
+.log-ts{color:var(--term-dim);font-size:.62rem}
+.log-label{color:var(--term-bright);font-weight:700;margin-left:8px}
 .log-pkt{display:flex;align-items:baseline;gap:10px;margin-top:3px}
-.log-note{color:var(--dim);font-size:.62rem;width:52px;flex-shrink:0;text-align:right}
-.log-hex{color:var(--accent);letter-spacing:.06em;font-size:.7rem}
-.log-hex span{color:var(--dim)}
-.log-empty{color:var(--dim);font-style:italic;padding:20px 0;text-align:center}
-.term-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.term-count{font-family:var(--mono);font-size:.62rem;color:var(--dim);flex:1}
-#auto-scroll-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--dim);cursor:pointer}
+.log-note{color:var(--term-dim);font-size:.62rem;width:52px;flex-shrink:0;text-align:right}
+.log-hex{color:var(--term-accent);letter-spacing:.06em;font-size:.7rem}
+.log-hex span{color:var(--term-dim)}
+.log-empty{color:var(--term-dim);font-style:italic;padding:20px 0;text-align:center}
+.term-footer{padding:8px 14px;border-top:1px solid var(--border2);display:flex;align-items:center;gap:10px}
+.term-count{font-family:var(--mono);font-size:.62rem;color:var(--term-dim);flex:1}
+#auto-scroll-lbl{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--term-dim);cursor:pointer}
 
 /* API table entry for log */
 .api-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -266,6 +305,7 @@ details[open] .chev{transform:rotate(180deg)}
   <div class="logo">&#9685;</div>
   <h1>ESPiBright</h1>
   <div class="hdr-r">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark theme">☀</button>
     <div class="time-tog">
       <span>REPEAT</span>
       <input type="number" id="tx-repeat" min="1" max="20" value="5"
@@ -1013,6 +1053,31 @@ loadDeviceState();
 
 pollLog();
 setInterval(pollLog, 1500);
+// ── Theme ──
+(function(){
+  // Determine initial theme: localStorage > system preference > dark default
+  const stored = localStorage.getItem('theme');
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = stored ? stored === 'dark' : sysDark !== false;
+  applyTheme(isDark ? 'dark' : 'light', false);
+
+  // Keep in sync if system pref changes and user hasn't overridden
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light', false);
+  });
+})();
+
+function applyTheme(t, save=true) {
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.textContent = t === 'dark' ? '☀' : '☾'; btn.title = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'; }
+  if (save) localStorage.setItem('theme', t);
+}
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
 
 </script>
 </body>
