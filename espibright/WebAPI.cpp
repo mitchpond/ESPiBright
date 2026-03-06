@@ -1,5 +1,6 @@
 #include "WebAPI.h"
 #include <ESPmDNS.h>
+#include "config.h"
 #include "html.h"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ void WebAPI::begin() {
     server_.on("/api/send/channels",       HTTP_POST, [this](){ handleSendChannels_(); });
     server_.on("/api/time/set",            HTTP_POST, [this](){ handleTimeSet_(); });
     server_.on("/api/time/send",           HTTP_POST, [this](){ handleTimeSend_(); });
+    server_.on("/api/time/ntp",            HTTP_POST, [this](){ handleTimeNtp_(); });
     server_.on("/api/schedule/set",        HTTP_POST, [this](){ handleScheduleSet_(); });
     server_.on("/api/schedule/send",       HTTP_POST, [this](){ handleScheduleSend_(); });
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
@@ -85,7 +87,7 @@ void WebAPI::begin() {
 
     const char* corsPaths[] = {
         "/api/send/index", "/api/send/raw", "/api/send/channels",
-        "/api/time/set", "/api/time/send",
+        "/api/time/set", "/api/time/send", "/api/time/ntp",
         "/api/schedule/set", "/api/schedule/send",
         "/api/settings/time_global", "/api/settings/repeat"
     };
@@ -276,6 +278,19 @@ void WebAPI::handleTimeSend_() {
     sendCors_();
     clock_.send("TIME SEND");
     server_.send(200, "application/json", JSON_OK);
+}
+
+void WebAPI::handleTimeNtp_() {
+    sendCors_();
+    bool ok = clock_.syncNtp(TZ_OFFSET_SEC);
+    if (ok) {
+        String r = String("{\"ok\":true,\"hh\":") + clock_.hh
+                 + ",\"mm\":" + clock_.mm
+                 + ",\"ss\":" + clock_.ss + "}";
+        server_.send(200, "application/json", r);
+    } else {
+        server_.send(200, "application/json", "{\"ok\":false,\"error\":\"NTP sync timed out\"}");
+    }
 }
 
 void WebAPI::handleScheduleSet_() {

@@ -64,6 +64,7 @@ private:
     void handleSendChannels_();
     void handleTimeSet_();
     void handleTimeSend_();
+    void handleTimeNtp_();
     void handleScheduleSet_();
     void handleScheduleSend_();
     void handleTimeGlobal_();

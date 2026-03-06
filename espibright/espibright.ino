@@ -62,12 +62,11 @@ void setup() {
     Serial.println();
 
     if (WiFi.status() == WL_CONNECTED) {
-        // Show the bare hostname — no domain suffix assumed.
-        // The IP is shown separately on the System page.
         display.ipAddress = HOSTNAME;
         MDNS.begin(HOSTNAME);
         Serial.println("Host: " + display.ipAddress);
         Serial.println("IP:   " + WiFi.localIP().toString());
+        clock_.syncNtp(TZ_OFFSET_SEC);
     } else {
         display.ipAddress = "NO WIFI";
         Serial.println("WiFi failed");
@@ -81,6 +80,7 @@ void setup() {
 // ── Loop ──────────────────────────────────────────────────────────────────────
 void loop() {
     M5.update();
+    clock_.tick();
     web.handle();
     display.update();
     delay(2);

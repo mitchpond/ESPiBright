@@ -413,6 +413,7 @@ details[open] .chev{transform:rotate(180deg)}
       <div style="display:flex;flex-direction:column;gap:7px;padding-top:18px">
         <button class="btn btn-p btn-sm" onclick="setTime()">Set ESP Clock</button>
         <button class="btn btn-s btn-sm" onclick="useBrowserTime()">Browser Time</button>
+        <button class="btn btn-s btn-sm" onclick="syncNtp()" id="btn-ntp">Sync NTP</button>
       </div>
     </div>
     <div class="send-row" style="margin-top:0;width:100%">
@@ -608,6 +609,7 @@ details[open] .chev{transform:rotate(180deg)}
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/set</td><td class="ad">Set time. <code>{"hh":19,"mm":20,"ss":29}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/send</td><td class="ad">Transmit time packets immediately.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/ntp</td><td class="ad">Re-sync ESP clock from NTP. Returns <code>{"ok":true,"hh":…,"mm":…,"ss":…}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Set schedule slots.<br><code>{"off":[{"active":true,"hh":23,"mm":0},{"active":true,"hh":11,"mm":0},{"active":false,"hh":0,"mm":0}],"on":[{"active":true,"hh":11,"mm":0},{"active":true,"hh":23,"mm":0}]}</code><br>State byte for ON slots and type 07 auto-computed from current channel state.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
@@ -711,7 +713,14 @@ async function sendChannels(){
   r.ok?toast('✓ channels sent'):toast('✗ '+(r.error||'error'),true);
 }
 async function quickAllOn(){
-  ['white','blue','rgb'].forEach(c=>setCh(c,true));
+  ['white','blue','rgb'].forEach(c => {
+    setCh(c, true);
+    CH[c].level = 10;
+    const sl = document.getElementById('sl-'+c);
+    const pct = document.getElementById('pct-'+c);
+    if(sl) sl.value = 10;
+    if(pct) pct.value = 100;
+  });
   await sendChannels();
 }
 async function quickAllOff(){
@@ -741,6 +750,21 @@ async function setTime(){
     ss:parseInt(document.getElementById('t-ss').value)
   });
   r.ok?toast('✓ time set'):toast('✗ '+(r.error||'error'),true);
+}
+async function syncNtp(){
+  const btn=document.getElementById('btn-ntp');
+  if(btn){ btn.disabled=true; btn.textContent='Syncing…'; }
+  const r=await api('/api/time/ntp','POST',{});
+  if(btn){ btn.disabled=false; btn.textContent='Sync NTP'; }
+  if(r.ok){
+    document.getElementById('t-hh').value=String(r.hh).padStart(2,'0');
+    document.getElementById('t-mm').value=String(r.mm).padStart(2,'0');
+    document.getElementById('t-ss').value=String(r.ss).padStart(2,'0');
+    updTDisp();
+    toast('✓ NTP synced');
+  } else {
+    toast('✗ '+(r.error||'NTP failed'),true);
+  }
 }
 async function sendTimeOnly(){
   const r=await api('/api/time/send','POST',{});

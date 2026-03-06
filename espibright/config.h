@@ -41,7 +41,12 @@
 #define UI_W_COL     0xFFE0   // warm white
 #define UI_B_COL     0x041F   // blue
 
-// ── Protocol ──────────────────────────────────────────────────────────────────
+// ── NTP ───────────────────────────────────────────────────────────────────────
+// UTC offset in seconds for your local timezone.
+// Examples: UTC-5 (EST) = -18000, UTC+1 (CET) = 3600, UTC+10 (AEST) = 36000
+#define TZ_OFFSET_SEC  (-5 * 3600)  // EST — change to match your timezone
+
+
 #define PROTO_ADDR0  0xD0
 #define PROTO_ADDR1  0x23
 #define CRC_POLY     0x31
