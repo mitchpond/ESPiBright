@@ -6,6 +6,7 @@ static const char HTML[] PROGMEM = R"HTMLEOF(<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="ESPiBright · ~ Nesso lives ~ 🐠">
 <title>ESPiBright</title>
 <script>
 // Set theme before CSS loads to avoid flash of wrong theme
@@ -290,6 +291,7 @@ details[open] .chev{transform:rotate(180deg)}
 /* Group label */
 .grp-lbl{font-size:.58rem;letter-spacing:.17em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
 
+
 /* Toast */
 #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);
   background:var(--panel);border:1px solid var(--accent);color:var(--accent);
@@ -297,6 +299,62 @@ details[open] .chev{transform:rotate(180deg)}
   transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s;opacity:0;z-index:999;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.err{border-color:var(--orange);color:var(--orange)}
+
+/* ── Mobile (≤600px — iPhone Pro baseline) ──────────────────────────────── */
+@media(max-width:600px){
+  /* Layout */
+  main{padding:12px 10px;gap:14px}
+
+  /* Header */
+  header{padding:10px 14px;gap:10px}
+  header h1{font-size:.8rem}
+  .logo{width:26px;height:26px;font-size:11px}
+
+  /* Last TX — truncate hex so it doesn't overflow */
+  .last-bar{padding:9px 12px;gap:8px;flex-wrap:wrap}
+  #last-hex{font-size:.6rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* Cards */
+  .card-body{padding:12px}
+  .card-hdr{padding:9px 13px}
+
+  /* Channel rows — tighter name, bigger touch targets */
+  .channel{padding:10px 12px;gap:10px}
+  .ch-name{width:42px;font-size:.78rem}
+  .tog-btn button{padding:7px 13px;font-size:.7rem}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px}
+
+  /* Buttons — full-width primary on mobile, comfortable touch size */
+  .btn{padding:11px 16px}
+  .btn-sm{padding:9px 13px}
+  .send-row{gap:8px}
+  .send-row .btn-p{flex:1}
+
+  /* Time card */
+  .tf input{width:60px;font-size:1.15rem;padding:6px}
+  .tsep{font-size:1.15rem}
+  #time-display{font-size:1.35rem}
+
+  /* Schedule — reduce padding inside rows, tighten grid gaps */
+  .sched-grid{gap:13px}
+  .sched-row{padding:7px 9px}
+  .sched-time input{width:38px;font-size:.82rem}
+
+  /* Color pills — slightly smaller on mobile */
+  .color-pill{padding:4px 9px;font-size:.68rem}
+
+  /* Packet crafter byte inputs */
+  .crafter-bytes{gap:5px}
+  .bc input{width:38px;height:32px;font-size:.85rem}
+
+  /* Terminal — shorter on mobile to leave room for controls */
+  .term-body{height:200px}
+
+  /* API table — let endpoint column wrap */
+  .api-tbl{font-size:.72rem}
+  .ep{font-size:.68rem;word-break:break-all}
+  .ad{font-size:.66rem}
+}
 </style>
 </head>
 <body>

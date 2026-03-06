@@ -201,15 +201,3 @@ questions.
 - TYPE `0x01` — set device clock (HMS)
 - TYPEs `0x02`–`0x09` — schedule slots
 
----
-
-## Version History
-
-| Version | Notes |
-|---------|-------|
-| 0.6 | RGB level slider, unified schedule RGB color, configurable repeat count, display rotation fix for Nesso N1, hardware docs updated. |
-| 0.5 | Initial release. Modular refactor from monolithic sketch. Full web UI, REST API, NVS persistence, IMU orientation, schedule support. |
-
----
-
-## Nesso lives 🐟
