@@ -179,7 +179,7 @@ void WebAPI::handleApiLog_() {
     String j = "{\"count\":" + String(log_.count) + ",\"entries\":[";
     bool first = true;
 
-    for (int offset = total - 1; offset >= 0; offset--) {
+    for (int offset = 0; offset < total; offset++) {
         int globalIdx = log_.count - 1 - offset;
         if (globalIdx <= since) break;
         const LogEntry* e = log_.slotAt(offset);
@@ -311,6 +311,7 @@ void WebAPI::handleScheduleSet_() {
 
 void WebAPI::handleScheduleSend_() {
     sendCors_();
+    clock_.send("TIME SEND");
     sched_.send();
     server_.send(200, "application/json", JSON_OK);
 }

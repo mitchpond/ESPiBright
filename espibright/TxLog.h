@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 #define LOG_ENTRIES  40
-#define LOG_PKT_MAX   6
+#define LOG_PKT_MAX   8
 #define LOG_HEX_LEN  17
 
 struct LogPkt {
