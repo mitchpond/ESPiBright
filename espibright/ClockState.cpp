@@ -1,8 +1,17 @@
 #include "ClockState.h"
 #include <time.h>
+#include <sys/time.h>
 
 void ClockState::set(uint8_t h, uint8_t m, uint8_t s) {
     hh = h; mm = m; ss = s;
+    // Write through to the hardware RTC so tick() reads back what we just set
+    struct timeval tv;
+    struct tm t = {};
+    t.tm_hour = h; t.tm_min = m; t.tm_sec = s;
+    t.tm_mday = 1; t.tm_mon = 0; t.tm_year = 70; // epoch date placeholder
+    tv.tv_sec  = mktime(&t);
+    tv.tv_usec = 0;
+    settimeofday(&tv, nullptr);
     Serial.printf("[TIME] set %02d:%02d:%02d\n", hh, mm, ss);
 }
 
@@ -28,9 +37,10 @@ bool ClockState::syncNtp(long tz_offset_sec, unsigned long timeoutMs) {
 }
 
 void ClockState::tick() {
-    unsigned long now = millis();
-    if (lastTickMs_ == 0) { lastTickMs_ = now; return; }
-    if (now - lastTickMs_ < 1000) return;
-    lastTickMs_ = now;
-    if (++ss >= 60) { ss = 0; if (++mm >= 60) { mm = 0; if (++hh >= 24) hh = 0; } }
+    struct tm t;
+    if (getLocalTime(&t, 0)) {
+        hh = t.tm_hour;
+        mm = t.tm_min;
+        ss = t.tm_sec;
+    }
 }

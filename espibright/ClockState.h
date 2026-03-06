@@ -25,5 +25,4 @@ public:
 
 private:
     RFTransmitter& rf_;
-    unsigned long  lastTickMs_ = 0;
 };
