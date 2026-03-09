@@ -62,13 +62,15 @@ void setup() {
     Serial.println();
 
     if (WiFi.status() == WL_CONNECTED) {
-        display.ipAddress = HOSTNAME;
+        display.hostname  = HOSTNAME;
+        display.ipAddress = WiFi.localIP().toString();
         MDNS.begin(HOSTNAME);
-        Serial.println("Host: " + display.ipAddress);
-        Serial.println("IP:   " + WiFi.localIP().toString());
+        Serial.println("Host: " + display.hostname);
+        Serial.println("IP:   " + display.ipAddress);
         clock_.syncNtp(TZ_OFFSET_SEC);
     } else {
-        display.ipAddress = "NO WIFI";
+        display.hostname  = "NO WIFI";
+        display.ipAddress = "---";
         Serial.println("WiFi failed");
     }
 

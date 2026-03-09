@@ -407,15 +407,12 @@ void Display::drawPageSystem_() {
     // Hostname
     D.setTextDatum(ML_DATUM);
     D.setTextColor(UI_DIM, UI_BG);    D.drawString("Host", 4, y);
-    D.setTextColor(UI_CYAN, UI_BG);   D.drawString(ipAddress.c_str(), 40, y);
+    D.setTextColor(UI_CYAN, UI_BG);   D.drawString(hostname.c_str(), 40, y);
 
     // IP address
     y += LH;
     D.setTextColor(UI_DIM, UI_BG);    D.drawString("IP",   4, y);
-    D.setTextColor(UI_CYAN, UI_BG);
-    D.drawString(WiFi.status() == WL_CONNECTED
-        ? WiFi.localIP().toString().c_str()
-        : "---", 40, y);
+    D.setTextColor(UI_CYAN, UI_BG);   D.drawString(ipAddress.c_str(), 40, y);
 
     // WiFi + RSSI
     y += LH;

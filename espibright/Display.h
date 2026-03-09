@@ -18,6 +18,7 @@ enum UIPage { PAGE_LIVE = 0, PAGE_SCHEDULE = 1, PAGE_SYSTEM = 2, PAGE_COUNT = 3 
 
 class Display {
 public:
+    String hostname  = "---";   // set by main after WiFi connects
     String ipAddress = "---";   // set by main after WiFi connects
 
     Display(ChannelState& ch, ScheduleState& sched,
