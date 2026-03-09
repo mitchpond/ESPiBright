@@ -40,6 +40,7 @@ public:
 
     void markDirty() { dirty_ = true; }
     void flashTx()   { txLit_ = true; txUntil_ = millis() + 280; }
+    void setWakeBrightness(uint8_t b);
 
 private:
     ChannelState&  ch_;

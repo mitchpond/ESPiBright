@@ -49,6 +49,11 @@ const char* Display::speedLabel(uint8_t cyc) {
 
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
+void Display::setWakeBrightness(uint8_t b) {
+    wakebrightness = b;
+    if (!sleeping_) D.setBrightness(b);
+}
+
 void Display::begin() {
     D.setRotation(3);
     D.setBrightness(wakebrightness);

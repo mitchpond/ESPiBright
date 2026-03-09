@@ -1197,8 +1197,8 @@ async function poll(){
       document.getElementById('tx-repeat').value=j.repeat_count;
     if(typeof j.battery_pct!=='undefined'){
       const bat=j.battery_pct,el=document.getElementById('bat-pill');
-      el.textContent='BAT '+bat+'%';
-      el.className='bat-pill '+(bat>50?'bat-ok':bat>20?'bat-warn':'bat-crit');
+      if(bat<0){el.textContent='BAT —';el.className='bat-pill';}
+      else{el.textContent='BAT '+bat+'%';el.className='bat-pill '+(bat>50?'bat-ok':bat>20?'bat-warn':'bat-crit');}
     }
     if(j.build){const bl=document.getElementById('build-lbl');if(bl&&!bl.textContent)bl.textContent='build '+j.build;}
   }catch(_){}

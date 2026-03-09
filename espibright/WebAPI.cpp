@@ -422,8 +422,8 @@ void WebAPI::handleSettingsDevPost_() {
     if (!doc["brightness"].isNull()) {
         int b = doc["brightness"].as<int>();
         if (b >= 0 && b <= 255) {
-            display_.wakebrightness = (uint8_t)b;
-            devSettings.brightness  = (uint8_t)b;
+            display_.setWakeBrightness((uint8_t)b);
+            devSettings.brightness = (uint8_t)b;
         }
     }
     if (!doc["hostname"].isNull()) {
