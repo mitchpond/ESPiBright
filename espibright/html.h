@@ -468,11 +468,11 @@ details[open] .chev{transform:rotate(180deg)}
   <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
     <span style="font-size:.68rem;color:var(--dim);text-align:center">Sets the time on the ESPiBright controller, not the fixture directly. Use "Send Time" to push the time to the fixture.</span>
     <div class="time-grid" style="justify-content:center">
-      <div class="tf"><label>Hour</label><input type="number" id="t-hh" min="0" max="23" value="19" oninput="updTDisp()"></div>
+      <div class="tf"><label>Hour</label><input type="number" id="t-hh" min="0" max="23" value="0"></div>
       <span class="tsep">:</span>
-      <div class="tf"><label>Min</label><input type="number" id="t-mm" min="0" max="59" value="20" oninput="updTDisp()"></div>
+      <div class="tf"><label>Min</label><input type="number" id="t-mm" min="0" max="59" value="0"></div>
       <span class="tsep">:</span>
-      <div class="tf"><label>Sec</label><input type="number" id="t-ss" min="0" max="59" value="29" oninput="updTDisp()"></div>
+      <div class="tf"><label>Sec</label><input type="number" id="t-ss" min="0" max="59" value="0"></div>
       <div style="display:flex;flex-direction:column;gap:7px;padding-top:18px">
         <button class="btn btn-p btn-sm" onclick="setTime()">Set ESP Clock</button>
         <button class="btn btn-s btn-sm" onclick="useBrowserTime()">Browser Time</button>
@@ -791,18 +791,24 @@ async function quickAllOff(){
 
 // ── Time ──
 function pad(n){return String(n).padStart(2,'0')}
-function updTDisp(){
-  document.getElementById('time-display').textContent=
-    pad(document.getElementById('t-hh').value)+':'+
-    pad(document.getElementById('t-mm').value)+':'+
-    pad(document.getElementById('t-ss').value);
+let _clockBase=null; // {sec, at}
+function applyEspTime(hh,mm,ss){
+  _clockBase={sec:hh*3600+mm*60+ss, at:Date.now()};
+  document.getElementById('t-hh').value=pad(hh);
+  document.getElementById('t-mm').value=pad(mm);
+  document.getElementById('t-ss').value=pad(ss);
+  _tickDisp();
 }
+function _tickDisp(){
+  if(!_clockBase){return;}
+  const s=(_clockBase.sec+Math.floor((Date.now()-_clockBase.at)/1000))%86400;
+  document.getElementById('time-display').textContent=
+    pad(Math.floor(s/3600))+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60);
+}
+setInterval(_tickDisp,1000);
 function useBrowserTime(){
   const n=new Date();
-  document.getElementById('t-hh').value=String(n.getHours()).padStart(2,'0');
-  document.getElementById('t-mm').value=String(n.getMinutes()).padStart(2,'0');
-  document.getElementById('t-ss').value=String(n.getSeconds()).padStart(2,'0');
-  updTDisp();
+  applyEspTime(n.getHours(),n.getMinutes(),n.getSeconds());
 }
 async function setTime(){
   const r=await api('/api/time/set','POST',{
@@ -818,10 +824,7 @@ async function syncNtp(){
   const r=await api('/api/time/ntp','POST',{});
   if(btn){ btn.disabled=false; btn.textContent='Sync NTP'; }
   if(r.ok){
-    document.getElementById('t-hh').value=String(r.hh).padStart(2,'0');
-    document.getElementById('t-mm').value=String(r.mm).padStart(2,'0');
-    document.getElementById('t-ss').value=String(r.ss).padStart(2,'0');
-    updTDisp();
+    applyEspTime(r.hh,r.mm,r.ss);
     toast('✓ NTP synced');
   } else {
     toast('✗ '+(r.error||'NTP failed'),true);
@@ -1034,7 +1037,6 @@ async function poll(){
 poll();setInterval(poll,10000);
 
 // Init
-updTDisp();
 updateRgbDurationRow();
 loadPackets();
 
@@ -1127,12 +1129,7 @@ function clearLog() {
 async function loadDeviceState() {
   try {
     const s = await api('/api/status','GET');
-    if(s.time){
-      document.getElementById('t-hh').value = String(s.time.hh).padStart(2,'0');
-      document.getElementById('t-mm').value = String(s.time.mm).padStart(2,'0');
-      document.getElementById('t-ss').value = String(s.time.ss).padStart(2,'0');
-      updTDisp();
-    }
+    if(s.time) applyEspTime(s.time.hh,s.time.mm,s.time.ss);
   } catch(e){}
   try {
     const ch = await api('/api/channels','GET');
