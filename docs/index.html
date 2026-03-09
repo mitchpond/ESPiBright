@@ -66,8 +66,13 @@ header{background:var(--panel);border-bottom:1px solid var(--border);padding:13p
 .logo{width:30px;height:30px;border:2px solid var(--accent);border-radius:5px;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:13px;color:var(--accent);flex-shrink:0}
-header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title);flex:1}
+header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title)}
+.hdr-title{flex:1;min-width:0}
+.build-lbl{font-family:var(--mono);font-size:.52rem;color:var(--dim);letter-spacing:.04em;margin-top:1px}
 .hdr-r{display:flex;align-items:center;gap:10px}
+.bat-pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
+  background:var(--border2);color:var(--dim);border:1px solid var(--border2);white-space:nowrap}
+.bat-ok{color:var(--green)}.bat-warn{color:#ffa040}.bat-crit{color:var(--red)}
 .pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
   background:var(--pill-bg);color:var(--green);border:1px solid var(--pill-border);white-space:nowrap}
 .time-tog{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--dim)}
@@ -381,7 +386,7 @@ window.__PACKETS__ = [
   {index:12,label:"TIME HMS",group:"Time",hex:"d023131414001d00",send_time:false}
 ];
 
-const _DEMO={label:'CHANNEL CMD',hex:'d0238a8a8601a6e4',ms_ago:4200,send_time_global:true,repeat_count:5,
+const _DEMO={label:'CHANNEL CMD',hex:'d0238a8a8601a6e4',ms_ago:4200,send_time_global:true,repeat_count:5,battery_pct:78,build:'26.3.1000',
   time:{hh:19,mm:20,ss:29},
   channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:8,rgb_cycle:1,rgb_level:10},
   schedule:{white_on:{active:true,hh:11,mm:0},white_off:{active:true,hh:23,mm:0},
@@ -405,7 +410,7 @@ function _timeHex(t){const h=(v)=>v.toString(16).padStart(2,'0');return 'd023'+h
 window.fetch=function(url,opts){
   const path=url.split('?')[0];let body={};try{body=JSON.parse(opts&&opts.body||'{}');}catch(_){}
   return new Promise(resolve=>{setTimeout(()=>{let data;
-    if(path==='/api/status'){_DEMO.ms_ago+=2000;data={label:_DEMO.label,hex:_DEMO.hex,ms_ago:_DEMO.ms_ago,send_time_global:_DEMO.send_time_global,repeat_count:_DEMO.repeat_count,time:_DEMO.time};}
+    if(path==='/api/status'){_DEMO.ms_ago+=2000;data={label:_DEMO.label,hex:_DEMO.hex,ms_ago:_DEMO.ms_ago,send_time_global:_DEMO.send_time_global,repeat_count:_DEMO.repeat_count,battery_pct:_DEMO.battery_pct,build:_DEMO.build,time:_DEMO.time};}
     else if(path==='/api/channels'){data={..._DEMO.channels};}
     else if(path==='/api/schedule'){data={..._DEMO.schedule};}
     else if(path==='/api/packets'){data=window.__PACKETS__;}
@@ -435,8 +440,12 @@ window.fetch=function(url,opts){
 </script>
 <header>
   <div class="logo">&#9685;</div>
-  <h1>ESPiBright</h1>
+  <div class="hdr-title">
+    <h1>ESPiBright</h1>
+    <div class="build-lbl" id="build-lbl"></div>
+  </div>
   <div class="hdr-r">
+    <span class="bat-pill" id="bat-pill" title="Battery level">—</span>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark theme">☀</button>
     <div class="pill">&#9679; CONNECTED</div>
   </div>
@@ -739,7 +748,7 @@ window.fetch=function(url,opts){
         <tbody>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/packets</td><td class="ad">All known packets as JSON.</td></tr>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle, battery level, firmware build.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/index</td><td class="ad">Known packet by index. <code>{"index":0}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/raw</td><td class="ad">7-byte payload (CRC auto). <code>{"payload":"d0238a8a8601a6","send_time":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
@@ -1105,6 +1114,12 @@ async function poll(){
       document.getElementById('global-time').checked=j.send_time_global;
     if(typeof j.repeat_count!=='undefined')
       document.getElementById('tx-repeat').value=j.repeat_count;
+    if(typeof j.battery_pct!=='undefined'){
+      const bat=j.battery_pct,el=document.getElementById('bat-pill');
+      el.textContent='BAT '+bat+'%';
+      el.className='bat-pill '+(bat>50?'bat-ok':bat>20?'bat-warn':'bat-crit');
+    }
+    if(j.build){const bl=document.getElementById('build-lbl');if(bl&&!bl.textContent)bl.textContent='build '+j.build;}
   }catch(_){}
 }
 poll();setInterval(poll,10000);
