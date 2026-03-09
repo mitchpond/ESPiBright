@@ -101,16 +101,9 @@ void WebAPI::begin() {
 
 void WebAPI::handleRoot_() {
     sendCors_();
-    String inj = "window.__PACKETS__=[";
-    for (int i = 0; i < numKnownPkts_; i++) {
-        if (i > 0) inj += ",";
-        inj += pktJson_(i);
-    }
-    inj += "];";
-    String html = FPSTR(HTML);
-    html.replace("const PACKETS = window.__PACKETS__ || [];",
-                 inj + "\nconst PACKETS=window.__PACKETS__;");
-    server_.send(200, "text/html", html);
+    server_.setContentLength(sizeof(HTML) - 1);
+    server_.send(200, "text/html", "");
+    server_.sendContent_P(HTML, sizeof(HTML) - 1);
 }
 
 void WebAPI::handleApiPackets_() {

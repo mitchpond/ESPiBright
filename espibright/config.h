@@ -6,7 +6,7 @@
 #define HOSTNAME     "ESPiBright"
 
 // ── RF TX ─────────────────────────────────────────────────────────────────────
-#define TX_PIN       GPIO_NUM_2
+#define TX_PIN       GPIO_NUM_7
 #define PULSE_US     508
 #define SHORT_GAP_US 508
 #define LONG_GAP_US  1008
@@ -44,7 +44,7 @@
 // ── NTP ───────────────────────────────────────────────────────────────────────
 // UTC offset in seconds for your local timezone.
 // Examples: UTC-5 (EST) = -18000, UTC+1 (CET) = 3600, UTC+10 (AEST) = 36000
-#define TZ_OFFSET_SEC  (-5 * 3600)  // EST — change to match your timezone
+#define TZ_OFFSET_SEC  (-5 * 3600)  // CDT — change to match your timezone
 
 
 #define PROTO_ADDR0  0xD0

@@ -687,8 +687,6 @@ details[open] .chev{transform:rotate(180deg)}
 <div id="toast"></div>
 
 <script>
-const PACKETS = window.__PACKETS__ || [];
-
 // ── Channel state ──
 const CH = {
   white:{on:true,level:10},
@@ -913,25 +911,29 @@ async function sendSchedule(){
 }
 
 // ── Known packets grid ──
-const groups=['Power','Dim','Channel','Schedule','Time'];
-const byGroup={};
-PACKETS.forEach(p=>(byGroup[p.group]=byGroup[p.group]||[]).push(p));
-const cont=document.getElementById('pkt-container');
-groups.forEach(g=>{
-  if(!byGroup[g])return;
-  const wrap=document.createElement('div');
-  wrap.style.marginBottom='15px';
-  const lbl=document.createElement('div');lbl.className='grp-lbl';lbl.textContent=g;
-  const grid=document.createElement('div');grid.className='pkt-grid-wrap g'+g;
-  byGroup[g].forEach(p=>{
-    const btn=document.createElement('button');btn.className='pkt-btn';
-    btn.textContent=p.label;
-    if(p.send_time){const s=document.createElement('span');s.className='tbadge';s.textContent='+T';btn.appendChild(s);}
-    btn.onclick=()=>sendIndex(p.index,btn);
-    grid.appendChild(btn);
+async function loadPackets(){
+  const pkts=await api('/api/packets');
+  if(!Array.isArray(pkts))return;
+  const groups=['Power','Dim','Channel','Schedule','Time'];
+  const byGroup={};
+  pkts.forEach(p=>(byGroup[p.group]=byGroup[p.group]||[]).push(p));
+  const cont=document.getElementById('pkt-container');
+  groups.forEach(g=>{
+    if(!byGroup[g])return;
+    const wrap=document.createElement('div');
+    wrap.style.marginBottom='15px';
+    const lbl=document.createElement('div');lbl.className='grp-lbl';lbl.textContent=g;
+    const grid=document.createElement('div');grid.className='pkt-grid-wrap g'+g;
+    byGroup[g].forEach(p=>{
+      const btn=document.createElement('button');btn.className='pkt-btn';
+      btn.textContent=p.label;
+      if(p.send_time){const s=document.createElement('span');s.className='tbadge';s.textContent='+T';btn.appendChild(s);}
+      btn.onclick=()=>sendIndex(p.index,btn);
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(lbl);wrap.appendChild(grid);cont.appendChild(wrap);
   });
-  wrap.appendChild(lbl);wrap.appendChild(grid);cont.appendChild(wrap);
-});
+}
 async function sendIndex(idx,btn){
   btn&&btn.classList.add('firing');
   const r=await api('/api/send/index','POST',{index:idx});
@@ -1034,6 +1036,7 @@ poll();setInterval(poll,10000);
 // Init
 updTDisp();
 updateRgbDurationRow();
+loadPackets();
 
 // ── TX Terminal ──
 let logSince = 0;
