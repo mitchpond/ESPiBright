@@ -18,24 +18,24 @@ void ScheduleState::buildRgbSlotPkt_(uint8_t* out, const SchedRgbSlot& s, uint8_
 void ScheduleState::send() {
     uint8_t pkts[7][8];
     const char* notes[7] = {
-        "WhOFF(03)", "WhON(04)", "BlON(05)",
-        "STATE(07)", "RGBON(08)", "RGBOFF(09)", "BlOFF(02)"
+        "BlOFF(02)", "WhOFF(03)", "WhON(04)", "BlON(05)",
+        "STATE(07)", "RGBON(08)", "RGBOFF(09)"
     };
 
-    buildSlotPkt_   (pkts[0], whiteOff, 0x03);
-    buildSlotPkt_   (pkts[1], whiteOn,  0x04);
-    buildSlotPkt_   (pkts[2], blueOn,   0x05);
+    buildSlotPkt_   (pkts[0], blueOff, 0x02);
+    buildSlotPkt_   (pkts[1], whiteOff, 0x03);
+    buildSlotPkt_   (pkts[2], whiteOn,  0x04);
+    buildSlotPkt_   (pkts[3], blueOn,   0x05);
 
     // Type 07: always LIVE state — NOT the frozen slot state
     {
         uint8_t liveState = ch_.rgbStateByte();
         uint8_t p7[7] = {0xD0, 0x23, liveState, 0x00, 0x00, 0x00, 0x07};
-        rf_.buildPacket(p7, pkts[3]);
+        rf_.buildPacket(p7, pkts[4]);
     }
 
-    buildRgbSlotPkt_(pkts[4], rgbOn,   0x08);
-    buildRgbSlotPkt_(pkts[5], rgbOff,  0x09);
-    buildSlotPkt_   (pkts[6], blueOff, 0x02);
+    buildRgbSlotPkt_(pkts[5], rgbOn,   0x08);
+    buildRgbSlotPkt_(pkts[6], rgbOff,  0x09);
 
     rf_.log().begin("SCHEDULE");
     for (int rep = 0; rep < rf_.repeatCount; rep++)
