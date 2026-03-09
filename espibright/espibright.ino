@@ -53,6 +53,7 @@ void setup() {
 
     // Apply TX settings
     rf.repeatCount = s.repeatCount;
+    rf.packetGapMs = s.packetGapMs;
     rf.timeEnabled = s.timeEnabled;
 
     // Restore persisted channel/schedule state before anything transmits

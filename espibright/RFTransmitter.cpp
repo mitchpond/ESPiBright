@@ -60,7 +60,7 @@ void RFTransmitter::flush(const char* label) {
     for (int rep = 0; rep < repeatCount; rep++) {
         for (int i = 0; i < bufN_; i++)
             transmitOnce(buf_[i].pkt);
-        if (rep < repeatCount - 1) delay(1);
+        if (rep < repeatCount - 1 && packetGapMs > 0) delay(packetGapMs);
     }
     // Tail section — once, after all repeats
     for (int i = 0; i < tailN_; i++)

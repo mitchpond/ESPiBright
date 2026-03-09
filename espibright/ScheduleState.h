@@ -43,6 +43,7 @@ public:
     ScheduleState(RFTransmitter& rf, ChannelState& ch)
         : rf_(rf), ch_(ch) {}
 
+    // Build and transmit the full 7-packet schedule burst (types 02–05, 07–09).
     void send();
 
     // Minutes until the next scheduled event from a given time; -1 if none active

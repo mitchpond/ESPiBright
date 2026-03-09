@@ -25,6 +25,8 @@
 
 namespace Protocol {
 
+    // Precompute the 256-entry lookup table for the Maxim/Dallas CRC-8 (poly 0x31).
+    // Call once at startup; pass the resulting table to checksum() and buildPacket().
     inline void buildCrcTable(uint8_t* table, uint8_t poly = CRC_POLY) {
         for (int i = 0; i < 256; i++) {
             uint8_t crc = i;
@@ -34,12 +36,14 @@ namespace Protocol {
         }
     }
 
+    // Compute CRC-8 over a 7-byte payload using a precomputed table.
     inline uint8_t checksum(const uint8_t* table, const uint8_t* p7) {
         uint8_t crc = 0;
         for (int i = 0; i < 7; i++) crc = table[crc ^ p7[i]];
         return table[crc ^ 0x00];
     }
 
+    // Append a CRC byte to a 7-byte payload, writing the complete 8-byte packet to out8.
     inline void buildPacket(const uint8_t* table, const uint8_t* p7, uint8_t* out8) {
         memcpy(out8, p7, 7);
         out8[7] = checksum(table, p7);
@@ -62,11 +66,14 @@ namespace Protocol {
         buildPacket(table, p7, out8);
     }
 
-    // Helpers for encoding
+    // Encode a channel's on/off state and level (1–10) into a single byte.
+    // Bit 7 = on flag; low nibble = level (1–10 → 0x1–0xA).
     inline uint8_t levelByte(bool on, uint8_t level) {
         return (on ? 0x80 : 0x00) | (level & 0x0F);
     }
 
+    // Encode the RGB channel's on/off state and color preset into a single byte.
+    // Bit 7 = on flag; low nibble = color index (see ChannelState.h for presets).
     inline uint8_t rgbStateByte(bool on, uint8_t color) {
         return (on ? 0x80 : 0x00) | (color & 0x0F);
     }
