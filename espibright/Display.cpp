@@ -48,7 +48,7 @@ const char* Display::speedLabel(uint8_t cyc) {
 
 void Display::begin() {
     D.setRotation(3);
-    D.setBrightness(SLEEP_BRIGHTNESS);
+    D.setBrightness(wakebrightness);
     D.setFont(&fonts::Font0);
     dirty_ = true;
 }
@@ -84,7 +84,7 @@ void Display::drawConnecting() {
     D.drawString("Connecting to", D.width()/2, 40);
     D.setTextColor(UI_BRIGHT, UI_BG);
     D.setTextSize(2);
-    D.drawString(WIFI_SSID, D.width()/2, 62);
+    D.drawString(wifiSsid.c_str(), D.width()/2, 62);
     D.setTextSize(1);
     D.setTextColor(0x780F, UI_BG);
     D.drawString("~ Nesso ~", D.width()/2, 90);
@@ -95,7 +95,7 @@ void Display::drawConnecting() {
 void Display::wake_() {
     sleeping_ = false;
     lastActivityMs_ = millis();
-    D.setBrightness(SLEEP_BRIGHTNESS);
+    D.setBrightness(wakebrightness);
     dirty_ = true;
 }
 
@@ -109,7 +109,7 @@ void Display::update() {
     }
 
     // Sleep timeout
-    if (!sleeping_ && now - lastActivityMs_ > SLEEP_TIMEOUT_MS) {
+    if (!sleeping_ && now - lastActivityMs_ > sleepTimeoutMs) {
         sleeping_ = true;
         D.setBrightness(0);
         return;
@@ -440,7 +440,7 @@ void Display::drawPageSystem_() {
     y += LH;
     int rssi = WiFi.RSSI();
     D.setTextColor(UI_DIM, UI_BG);    D.drawString("WiFi", 4, y);
-    D.setTextColor(UI_BRIGHT, UI_BG); D.drawString(WIFI_SSID, 40, y);
+    D.setTextColor(UI_BRIGHT, UI_BG); D.drawString(wifiSsid.c_str(), 40, y);
     drawRssiBars_(160, y + 6, rssi);
     char rsbuf[12]; snprintf(rsbuf, sizeof(rsbuf), "%ddBm", rssi);
     D.setTextDatum(MR_DATUM); D.setTextColor(UI_DIM, UI_BG);

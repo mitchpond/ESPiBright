@@ -33,12 +33,13 @@ public:
 
     // ── Buffer API ────────────────────────────────────────────────────────────
     void clearBuf();
-    void addToBuf(const uint8_t* p8, const char* note);
-    // Repeat buffer repeatCount times (1 ms between batches), log, fire callback
+    void addToBuf (const uint8_t* p8, const char* note); // repeated repeatCount times
+    void addToTail(const uint8_t* p8, const char* note); // sent ONCE after burst
+    // Transmit buf_ × repeatCount, then tail_ × 1; log all; fire onTransmit
     void flush(const char* label);
 
     // ── Convenience wrappers ─────────────────────────────────────────────────
-    // CMD [+ HMS if withTime && timeEnabled], repeated as a batch
+    // CMD × repeatCount, then HMS × 1 (tail) if withTime && timeEnabled
     void sendPkt(const uint8_t* p8, bool withTime, const char* label);
 
     // Build and send a time HMS packet burst
@@ -73,7 +74,9 @@ private:
     uint8_t              pktTimeHms_[8];
 
     BufPkt  buf_[BUF_CAP];
-    int     bufN_ = 0;
+    int     bufN_  = 0;
+    BufPkt  tail_[BUF_CAP];
+    int     tailN_ = 0;
 
     void recordTx_(const uint8_t* p8, const char* label);
 };

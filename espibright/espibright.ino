@@ -18,18 +18,18 @@
 #include "ClockState.h"
 #include "ScheduleState.h"
 #include "Storage.h"
-#include "WebAPI.h"
 #include "Display.h"
+#include "WebAPI.h"
 
 // ── Global instances ──────────────────────────────────────────────────────────
-TxLog        txLog;
+TxLog         txLog;
 RFTransmitter rf(txLog);
 ChannelState  channels(rf);
 ClockState    clock_(rf);
 ScheduleState schedule(rf, channels);
 Storage       store;
 Display       display(channels, schedule, clock_, rf);
-WebAPI        web(rf, channels, schedule, clock_, txLog, store);
+WebAPI        web(rf, channels, schedule, clock_, txLog, store, display);
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 void setup() {
@@ -38,11 +38,24 @@ void setup() {
     auto cfg = M5.config();
     M5.begin(cfg);
 
+    // Load device settings first — they affect everything below
+    store.loadSettings(web.devSettings);
+    DevSettings& s = web.devSettings;
+
+    // Apply display settings before splash
+    display.sleepTimeoutMs = (uint32_t)s.sleepTimeoutSec * 1000;
+    display.wakebrightness = s.brightness;
+    display.wifiSsid       = s.wifiSsid;
+
     display.begin();
     display.drawBootSplash();
     display.drawConnecting();
 
-    // Restore persisted state before anything transmits
+    // Apply TX settings
+    rf.repeatCount = s.repeatCount;
+    rf.timeEnabled = s.timeEnabled;
+
+    // Restore persisted channel/schedule state before anything transmits
     store.loadAll(channels, schedule);
 
     rf.begin();
@@ -50,9 +63,9 @@ void setup() {
     // Wire TX flash callback: every transmission lights the header dot
     rf.onTransmit = [](){ display.flashTx(); display.markDirty(); };
 
-    // Connect WiFi
-    WiFi.setHostname(HOSTNAME);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    // Connect WiFi using persisted credentials
+    WiFi.setHostname(s.hostname);
+    WiFi.begin(s.wifiSsid, s.wifiPass);
     int tries = 0;
     while (WiFi.status() != WL_CONNECTED && tries < 40) {
         delay(500);
@@ -62,12 +75,12 @@ void setup() {
     Serial.println();
 
     if (WiFi.status() == WL_CONNECTED) {
-        display.hostname  = HOSTNAME;
+        display.hostname  = s.hostname;
         display.ipAddress = WiFi.localIP().toString();
-        MDNS.begin(HOSTNAME);
+        MDNS.begin(s.hostname);
         Serial.println("Host: " + display.hostname);
         Serial.println("IP:   " + display.ipAddress);
-        clock_.syncNtp(TZ_OFFSET_SEC);
+        clock_.syncNtp(s.tzOffsetSec);
     } else {
         display.hostname  = "NO WIFI";
         display.ipAddress = "---";

@@ -33,7 +33,8 @@ void RFTransmitter::transmitOnce(const uint8_t* p8) {
 }
 
 void RFTransmitter::clearBuf() {
-    bufN_ = 0;
+    bufN_  = 0;
+    tailN_ = 0;
 }
 
 void RFTransmitter::addToBuf(const uint8_t* p8, const char* note) {
@@ -44,21 +45,33 @@ void RFTransmitter::addToBuf(const uint8_t* p8, const char* note) {
     bp.note[sizeof(bp.note) - 1] = '\0';
 }
 
-void RFTransmitter::flush(const char* label) {
-    if (bufN_ == 0) return;
+void RFTransmitter::addToTail(const uint8_t* p8, const char* note) {
+    if (tailN_ >= BUF_CAP) return;
+    BufPkt& bp = tail_[tailN_++];
+    memcpy(bp.pkt, p8, 8);
+    strncpy(bp.note, note, sizeof(bp.note) - 1);
+    bp.note[sizeof(bp.note) - 1] = '\0';
+}
 
+void RFTransmitter::flush(const char* label) {
+    if (bufN_ == 0 && tailN_ == 0) return;
+
+    // Repeated section
     for (int rep = 0; rep < repeatCount; rep++) {
         for (int i = 0; i < bufN_; i++)
             transmitOnce(buf_[i].pkt);
         if (rep < repeatCount - 1) delay(1);
     }
+    // Tail section — once, after all repeats
+    for (int i = 0; i < tailN_; i++)
+        transmitOnce(tail_[i].pkt);
 
     log_.begin(label);
-    for (int i = 0; i < bufN_; i++)
-        log_.addPkt(buf_[i].pkt, buf_[i].note);
+    for (int i = 0; i < bufN_;  i++) log_.addPkt(buf_[i].pkt,  buf_[i].note);
+    for (int i = 0; i < tailN_; i++) log_.addPkt(tail_[i].pkt, tail_[i].note);
     log_.commit();
 
-    recordTx_(buf_[0].pkt, label);
+    recordTx_(bufN_ > 0 ? buf_[0].pkt : tail_[0].pkt, label);
 }
 
 void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
@@ -68,7 +81,7 @@ void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
 void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label) {
     clearBuf();
     addToBuf(p8, "CMD");
-    if (withTime && timeEnabled) addToBuf(pktTimeHms_, "HMS");
+    if (withTime && timeEnabled) addToTail(pktTimeHms_, "HMS");
     flush(label);
 }
 
