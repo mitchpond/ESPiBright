@@ -73,30 +73,26 @@ header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:up
 .bat-pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
   background:var(--border2);color:var(--dim);border:1px solid var(--border2);white-space:nowrap}
 .bat-ok{color:var(--green)}.bat-warn{color:#ffa040}.bat-crit{color:var(--red)}
-.settings-form{display:flex;flex-direction:column;gap:8px;padding:2px 0}
-.sgrp-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--dim);border-bottom:1px solid var(--border);padding-bottom:3px;margin-top:4px}
-.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
-.cfg-row>label{font-size:.8rem;color:var(--text);flex:1;min-width:0}
-.cfg-unit{font-size:.68rem;color:var(--dim);font-weight:400;margin-left:3px}
-.cfg-row input[type=text],.cfg-row input[type=password],.cfg-row input[type=number]{
-  width:150px;background:var(--input-bg);border:1px solid var(--border2);border-radius:4px;
-  padding:4px 8px;font-family:var(--mono);font-size:.78rem;color:var(--text);flex-shrink:0}
-.cfg-row input[type=range]{width:110px;flex-shrink:0}
-.cfg-range-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.cfg-range-wrap span{font-family:var(--mono);font-size:.75rem;color:var(--dim);min-width:24px;text-align:right}
+/* Device Settings */
+.settings-form{display:flex;flex-direction:column;gap:7px;padding:2px 0}
+.cfg-section-hdr{font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--border);padding-bottom:4px;margin-top:8px}
+.cfg-section-hdr:first-child{margin-top:0}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:30px}
+.cfg-lbl{font-size:.78rem;color:var(--text);flex:1;min-width:0}
+.cfg-inp{width:160px;background:var(--bg);border:1px solid var(--border);color:var(--accent);
+  font-family:var(--mono);font-size:.8rem;border-radius:4px;padding:5px 8px;outline:none;flex-shrink:0}
+.cfg-inp:focus{border-color:var(--accent)}
 .cfg-pass-wrap{display:flex;gap:5px;flex-shrink:0}
-.cfg-pass-wrap button{font-size:.68rem;padding:3px 7px;border-radius:4px;
-  background:var(--border2);border:1px solid var(--border2);color:var(--dim);cursor:pointer}
-.cfg-warn-badge{font-size:.6rem;font-weight:400;letter-spacing:.04em;text-transform:none;
-  background:#ffa04022;color:#ffa040;border:1px solid #ffa04055;border-radius:10px;padding:1px 7px;margin-left:6px}
-.cfg-note{font-size:.72rem;color:var(--dim);background:#ffa04011;border:1px solid #ffa04033;
-  border-radius:5px;padding:7px 10px;line-height:1.5;margin-top:2px}
-.cfg-actions{display:flex;gap:8px;padding-top:4px}
-.cfg-save-btn{background:var(--accent);color:#000;border:none;border-radius:5px;
-  padding:6px 16px;font-size:.8rem;font-weight:700;cursor:pointer;letter-spacing:.05em}
-.cfg-reboot-btn{background:transparent;color:var(--red);border:1px solid var(--red);
-  border-radius:5px;padding:6px 16px;font-size:.8rem;cursor:pointer}
+.cfg-pass-wrap button{font-family:var(--sans);font-size:.68rem;padding:4px 9px;
+  border-radius:4px;background:var(--panel2);border:1px solid var(--border2);
+  color:var(--dim);cursor:pointer;transition:border-color .12s,color .12s}
+.cfg-pass-wrap button:hover{border-color:var(--accent);color:var(--accent)}
+.cfg-warn-badge{font-size:.58rem;font-weight:400;letter-spacing:.04em;text-transform:none;
+  background:#ffa04022;color:#ffa040;border:1px solid #ffa04055;
+  border-radius:10px;padding:1px 7px;margin-left:6px}
+.cfg-note{font-size:.7rem;color:var(--dim);background:#ffa04011;border:1px solid #ffa04033;
+  border-radius:var(--rs);padding:7px 10px;line-height:1.5;margin-top:2px}
 .pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
   background:var(--pill-bg);color:var(--green);border:1px solid var(--pill-border);white-space:nowrap}
 .time-tog{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--dim)}
@@ -704,60 +700,71 @@ window.fetch=function(url,opts){
     <summary>
       <div class="card-hdr sum-row" style="border-bottom:none">
         <span class="card-title">Device Settings</span>
-        <span class="chev">▼</span>
+        <span class="chev">&#9660;</span>
       </div>
     </summary>
     <div class="card-body">
       <div class="settings-form">
-        <div class="sgrp-title">Transmission</div>
+
+        <div class="cfg-section-hdr">Transmission</div>
         <div class="cfg-row">
-          <label>Burst repeat count<span class="cfg-unit">(1–20)</span></label>
-          <input type="number" id="cfg-repeat" min="1" max="20" value="5">
+          <span class="cfg-lbl">Burst repeat count</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" class="num" id="cfg-repeat" min="1" max="20" value="5" style="width:52px">
+            <span class="pct">per burst (1–20)</span>
+          </div>
         </div>
         <div class="cfg-row">
-          <label>Send time packet after burst</label>
-          <input type="checkbox" id="cfg-time" checked>
+          <span class="cfg-lbl">Send time packet after burst</span>
+          <label class="sw"><input type="checkbox" id="cfg-time" checked><span class="sw-tr"></span></label>
         </div>
 
-        <div class="sgrp-title">Display</div>
+        <div class="cfg-section-hdr">Display</div>
         <div class="cfg-row">
-          <label>Screen timeout<span class="cfg-unit">seconds</span></label>
-          <input type="number" id="cfg-timeout" min="10" max="3600" value="180">
+          <span class="cfg-lbl">Screen timeout</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" class="num" id="cfg-timeout" min="10" max="3600" value="180" style="width:68px">
+            <span class="pct">sec</span>
+          </div>
         </div>
         <div class="cfg-row">
-          <label>Brightness</label>
-          <div class="cfg-range-wrap">
-            <input type="range" id="cfg-bright" min="10" max="255" value="180">
-            <span id="cfg-bright-val">180</span>
+          <span class="cfg-lbl">Brightness</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="range" id="cfg-bright" min="10" max="255" value="180" style="width:100px">
+            <span class="pct" id="cfg-bright-val" style="font-family:var(--mono);min-width:24px;text-align:right">180</span>
           </div>
         </div>
 
-        <div class="sgrp-title">Network <span class="cfg-warn-badge">⚠ requires reboot</span></div>
+        <div class="cfg-section-hdr">Network <span class="cfg-warn-badge">&#9888; requires reboot</span></div>
         <div class="cfg-row">
-          <label>Hostname</label>
-          <input type="text" id="cfg-host" maxlength="32" value="ESPiBright">
+          <span class="cfg-lbl">Hostname</span>
+          <input type="text" class="cfg-inp" id="cfg-host" maxlength="32" value="ESPiBright">
         </div>
         <div class="cfg-row">
-          <label>WiFi SSID</label>
-          <input type="text" id="cfg-ssid" maxlength="64">
+          <span class="cfg-lbl">WiFi SSID</span>
+          <input type="text" class="cfg-inp" id="cfg-ssid" maxlength="64">
         </div>
         <div class="cfg-row">
-          <label>WiFi Password</label>
+          <span class="cfg-lbl">WiFi Password</span>
           <div class="cfg-pass-wrap">
-            <input type="password" id="cfg-pass" maxlength="64" placeholder="(unchanged)">
+            <input type="password" class="cfg-inp" id="cfg-pass" maxlength="64" placeholder="(unchanged)" style="width:120px">
             <button type="button" id="cfg-pass-show" onclick="cfgTogglePass()">show</button>
           </div>
         </div>
         <div class="cfg-row">
-          <label>Timezone offset<span class="cfg-unit">hours, e.g. −5 for EST</span></label>
-          <input type="number" id="cfg-tz" min="-12" max="14" step="0.5" value="-5">
+          <span class="cfg-lbl">Timezone offset</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" class="num" id="cfg-tz" min="-12" max="14" step="0.5" value="-5" style="width:60px">
+            <span class="pct">hours</span>
+          </div>
         </div>
-        <div class="cfg-note">⚠ WiFi credentials are stored in device flash (unencrypted NVS). Setting the wrong SSID or password currently requires a reflash to recover WiFi access.</div>
+        <div class="cfg-note">&#9888; WiFi credentials stored in device flash (unencrypted NVS). Wrong SSID or password currently requires a reflash to recover.</div>
 
-        <div class="cfg-actions">
-          <button class="cfg-save-btn" onclick="cfgSave()">Save Settings</button>
-          <button class="cfg-reboot-btn" onclick="cfgReboot()">Reboot</button>
+        <div class="send-row" style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px">
+          <button class="btn btn-o btn-sm" onclick="cfgReboot()">Reboot device</button>
+          <button class="btn btn-p btn-sm" onclick="cfgSave()">Save Settings</button>
         </div>
+
       </div>
     </div>
   </details>
@@ -791,37 +798,6 @@ window.fetch=function(url,opts){
         <button class="btn btn-p" onclick="sendCraft()">Send</button>
         <label><input type="checkbox" id="craft-time" checked> append time packets</label>
       </div>
-    </div>
-  </details>
-</div>
-
-<!-- Advanced Config -->
-<div class="card">
-  <details>
-    <summary>
-      <div class="card-hdr sum-row" style="border-bottom:none">
-        <span class="card-title">Advanced Config</span>
-        <span class="chev">&#9660;</span>
-      </div>
-    </summary>
-    <div class="card-body" style="display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <div class="time-tog">
-          <span style="color:var(--text);font-size:.8rem">Burst Repeat</span>
-          <input type="number" id="tx-repeat" min="1" max="20" value="5"
-            style="width:44px;background:var(--bg);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:.85rem;text-align:center;border-radius:4px;padding:3px 2px;outline:none;-moz-appearance:textfield"
-            onchange="setRepeat(this.value)">
-          <span style="font-size:.72rem;color:var(--dim)">per packet (1–20)</span>
-        </div>
-        <div class="time-tog">
-          <span style="color:var(--text);font-size:.8rem">Append Time Packets</span>
-          <label class="sw">
-            <input type="checkbox" id="global-time" checked onchange="setGlobalTime(this.checked)">
-            <span class="sw-tr"></span>
-          </label>
-        </div>
-      </div>
-      <p style="font-size:.72rem;color:var(--dim)">Burst Repeat: number of times each RF packet is retransmitted per send. Increase if the fixture misses commands. Append Time: automatically include device time packets with every channel command.</p>
     </div>
   </details>
 </div>
