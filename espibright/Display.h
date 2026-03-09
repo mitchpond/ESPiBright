@@ -48,8 +48,9 @@ private:
     ClockState&    clock_;
     RFTransmitter& rf_;
 
-    UIPage   page_          = PAGE_LIVE;
-    bool     dirty_         = true;
+    UIPage   page_             = PAGE_LIVE;
+    bool     dirty_            = true;
+    bool     pendingBrightness_ = false;
     bool     landscape_     = true;
     uint8_t  rotation_      = 3;
     uint32_t tickMs_        = 0;

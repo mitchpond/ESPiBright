@@ -125,7 +125,7 @@ void WebAPI::handleApiPackets_() {
 
 void WebAPI::handleApiStatus_() {
     sendCors_();
-    int8_t bat = M5.Power.getBatteryLevel();
+    int bat = M5.Power.getBatteryLevel();
     String j = "{\"label\":\""  + String(rf_.lastLabel) + "\""
              + ",\"hex\":\""    + String(rf_.lastHex)   + "\""
              + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))

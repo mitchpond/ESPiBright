@@ -51,7 +51,7 @@ const char* Display::speedLabel(uint8_t cyc) {
 
 void Display::setWakeBrightness(uint8_t b) {
     wakebrightness = b;
-    if (!sleeping_) D.setBrightness(b);
+    pendingBrightness_ = true;
 }
 
 void Display::begin() {
@@ -59,6 +59,7 @@ void Display::begin() {
     D.setBrightness(wakebrightness);
     D.setFont(&fonts::Font0);
     dirty_ = true;
+    lastActivityMs_ = millis();  // don't count boot time against sleep timeout
 }
 
 void Display::drawBootSplash() {
@@ -109,6 +110,11 @@ void Display::wake_() {
 
 void Display::update() {
     uint32_t now = millis();
+
+    if (pendingBrightness_) {
+        pendingBrightness_ = false;
+        D.setBrightness(sleeping_ ? 0 : wakebrightness);
+    }
 
     // Touch wake / activity
     if (M5.Touch.getDetail().wasPressed()) {
