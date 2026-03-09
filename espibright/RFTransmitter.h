@@ -52,7 +52,7 @@ public:
     const uint8_t* crcTable() const { return crcTable_; }
 
     bool timeEnabled = true;           // global +TIME toggle
-    int  repeatCount  = TX_REPEAT;     // batch repeat count (1–20, set via API)
+    int  repeatCount  = TX_REPEAT;     // burst repeat count (1–20, set via API)
     int  packetGapMs  = TX_PACKET_GAP_MS; // ms delay between each individual packet in a burst (0–1000)
 
     // Last TX info (read by WebAPI / Display)

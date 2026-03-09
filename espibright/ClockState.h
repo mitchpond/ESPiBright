@@ -13,14 +13,18 @@ public:
 
     explicit ClockState(RFTransmitter& rf) : rf_(rf) {}
 
+    // Set the time and write it through to the hardware RTC so tick() stays in sync.
     void set(uint8_t h, uint8_t m, uint8_t s);
+
+    // Transmit a TYPE 0x01 HMS time packet burst to the fixture.
     void send(const char* label = "TIME SEND");
 
     // Sync from NTP. Blocks up to timeoutMs waiting for a valid fix.
     // Returns true if successful. tz_offset_sec adjusts for local time.
     bool syncNtp(long tz_offset_sec = 0, unsigned long timeoutMs = 6000);
 
-    // Call every second from loop to tick the clock forward
+    // Read the current time from the hardware RTC and update hh/mm/ss.
+    // Call every loop() iteration; updates are sub-ms cost when the RTC is ready.
     void tick();
 
 private:

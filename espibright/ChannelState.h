@@ -43,8 +43,8 @@ public:
     // Convenience: encode current RGB state as a single byte (used by ScheduleState)
     uint8_t rgbStateByte() const;
 
-    // Returns the high nibble of the TYPE byte for a channel command (TYPE 0x06).
-    // = rgb_level when RGB is on; max(white_level, blue_level) otherwise.
+    // Returns the level for the high nibble of the TYPE byte (channel command TYPE 0x06).
+    // Priority: rgb_level if RGB on; white_level if white on; blue_level if blue on; 0xA if all off.
     // Combined with cmd type: typeByte = (dominantLevel() << 4) | 0x06
     uint8_t dominantLevel() const;
 

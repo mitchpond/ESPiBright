@@ -10,12 +10,15 @@ const char* Display::rgbColorName(uint8_t c) {
     return (c >= 1 && c <= 9) ? names[c] : names[0];
 }
 
+// Return the TFT RGB565 color for a static color preset (c = 1–8).
+// Rainbow (c = 9) is not handled here — callers that need it should use rainbowNow().
 uint16_t Display::rgbPresetTft(uint8_t c) {
     const uint16_t cols[] = {0x4208, 0x001F, 0x07E0, 0xFFFF, 0xF800,
                               0xFCA0, 0x780F, 0xFE19, 0xFFE0, 0x0000};
     return (c >= 1 && c <= 8) ? cols[c] : 0x4208;
 }
 
+// Compute an animated RGB565 color that cycles through the hue wheel based on millis().
 uint16_t Display::rainbowNow() {
     uint8_t h = (millis() / 24) & 0xFF;
     uint8_t s = h / 43, f = (h % 43) * 6;

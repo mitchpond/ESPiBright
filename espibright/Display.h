@@ -11,10 +11,11 @@ enum UIPage { PAGE_LIVE = 0, PAGE_SCHEDULE = 1, PAGE_SYSTEM = 2, PAGE_COUNT = 3 
 // ── Display ───────────────────────────────────────────────────────────────────
 // Owns all screen drawing. Does not transmit anything directly — calls back
 // into ChannelState, ScheduleState, ClockState via references.
-// Button B on PAGE_LIVE  → ch.send()
-// Button B on PAGE_SCHED → sched.send()
-// Button C on PAGE_LIVE  → clock.send()
-// Button C on PAGE_SYS   → ESP.restart()
+// BtnA click on PAGE_LIVE     → ch.send()
+// BtnA click on PAGE_SCHEDULE → sched.send()
+// BtnA click on PAGE_SYSTEM   → clock.send("SYNC")
+// BtnA hold  on PAGE_SYSTEM   → ESP.restart()
+// BtnB click (any page)       → cycle to next page
 
 class Display {
 public:

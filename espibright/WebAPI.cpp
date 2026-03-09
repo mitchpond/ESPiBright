@@ -154,10 +154,12 @@ void WebAPI::handleApiChannels_() {
     server_.send(200, "application/json", j);
 }
 
+// Serialize a plain schedule slot to a JSON key:object pair.
 static String schedSlotJson(const char* key, const SchedSlot& s) {
     return String("\"") + key + "\":{\"active\":" + (s.active ? "true" : "false")
          + ",\"hh\":" + s.hh + ",\"mm\":" + s.mm + "}";
 }
+// Serialize an RGB schedule slot (includes frozen state byte) to a JSON key:object pair.
 static String schedRgbSlotJson(const char* key, const SchedRgbSlot& s) {
     return String("\"") + key + "\":{\"active\":" + (s.active ? "true" : "false")
          + ",\"hh\":" + s.hh + ",\"mm\":" + s.mm + ",\"state\":" + s.state + "}";
@@ -329,6 +331,7 @@ void WebAPI::handleScheduleSet_() {
 
 void WebAPI::handleScheduleSend_() {
     sendCors_();
+    // Send current time first so the fixture clock is in sync before applying the schedule.
     clock_.send("TIME SEND");
     sched_.send();
     server_.send(200, "application/json", JSON_OK);
