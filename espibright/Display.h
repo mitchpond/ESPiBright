@@ -40,14 +40,16 @@ private:
     ClockState&    clock_;
     RFTransmitter& rf_;
 
-    UIPage   page_       = PAGE_LIVE;
-    bool     dirty_      = true;
-    bool     landscape_  = true;
-    uint8_t  rotation_   = 3;
-    uint32_t tickMs_     = 0;
-    uint32_t imuMs_      = 0;
-    bool     txLit_      = false;
-    uint32_t txUntil_    = 0;
+    UIPage   page_          = PAGE_LIVE;
+    bool     dirty_         = true;
+    bool     landscape_     = true;
+    uint8_t  rotation_      = 3;
+    uint32_t tickMs_        = 0;
+    uint32_t imuMs_         = 0;
+    bool     txLit_         = false;
+    uint32_t txUntil_       = 0;
+    bool     sleeping_      = false;
+    uint32_t lastActivityMs_ = 0;
 
     // Drawing helpers
     void redraw_();
@@ -63,9 +65,10 @@ private:
     void drawPageSchedule_();
     void drawPageSystem_();
 
-    // IMU + buttons
+    // IMU + buttons + sleep
     void checkOrientation_();
     void handleButtons_();
+    void wake_();
 
     // Color helpers
     static const char*  rgbColorName(uint8_t c);

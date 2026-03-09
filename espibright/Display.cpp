@@ -48,7 +48,7 @@ const char* Display::speedLabel(uint8_t cyc) {
 
 void Display::begin() {
     D.setRotation(3);
-    D.setBrightness(180);
+    D.setBrightness(SLEEP_BRIGHTNESS);
     D.setFont(&fonts::Font0);
     dirty_ = true;
 }
@@ -92,8 +92,30 @@ void Display::drawConnecting() {
 
 // ── Main update loop ──────────────────────────────────────────────────────────
 
+void Display::wake_() {
+    sleeping_ = false;
+    lastActivityMs_ = millis();
+    D.setBrightness(SLEEP_BRIGHTNESS);
+    dirty_ = true;
+}
+
 void Display::update() {
     uint32_t now = millis();
+
+    // Touch wake / activity
+    if (M5.Touch.getDetail().wasPressed()) {
+        if (sleeping_) { wake_(); return; }
+        lastActivityMs_ = now;
+    }
+
+    // Sleep timeout
+    if (!sleeping_ && now - lastActivityMs_ > SLEEP_TIMEOUT_MS) {
+        sleeping_ = true;
+        D.setBrightness(0);
+        return;
+    }
+
+    if (sleeping_) return;
 
     // IMU orientation check every 800ms
     if (now - imuMs_ > 800) {
