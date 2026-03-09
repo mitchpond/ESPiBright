@@ -49,6 +49,11 @@
 #define TZ_OFFSET_SEC  (-5 * 3600)  // CDT — change to match your timezone
 
 
+// ── Firmware build number ─────────────────────────────────────────────────────
+// Format: YY.M.BUILD  (year-2000, month, sequential build counter)
+// Increment BUILD each release; update YY.M when the calendar month changes.
+#define FW_BUILD     "26.3.1000"
+
 #define PROTO_ADDR0  0xD0
 #define PROTO_ADDR1  0x23
 #define CRC_POLY     0x31

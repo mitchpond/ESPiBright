@@ -69,8 +69,37 @@ header{background:var(--panel);border-bottom:1px solid var(--border);padding:13p
 .logo{width:30px;height:30px;border:2px solid var(--accent);border-radius:5px;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:13px;color:var(--accent);flex-shrink:0}
-header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title);flex:1}
+header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title)}
+.hdr-title{flex:1;min-width:0}
+.build-lbl{font-family:var(--mono);font-size:.52rem;color:var(--dim);letter-spacing:.04em;margin-top:1px}
 .hdr-r{display:flex;align-items:center;gap:10px}
+.bat-pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
+  background:var(--border2);color:var(--dim);border:1px solid var(--border2);white-space:nowrap}
+.bat-ok{color:var(--green)}.bat-warn{color:#ffa040}.bat-crit{color:var(--red)}
+.settings-form{display:flex;flex-direction:column;gap:8px;padding:2px 0}
+.sgrp-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);border-bottom:1px solid var(--border);padding-bottom:3px;margin-top:4px}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
+.cfg-row>label{font-size:.8rem;color:var(--text);flex:1;min-width:0}
+.cfg-unit{font-size:.68rem;color:var(--dim);font-weight:400;margin-left:3px}
+.cfg-row input[type=text],.cfg-row input[type=password],.cfg-row input[type=number]{
+  width:150px;background:var(--input-bg);border:1px solid var(--border2);border-radius:4px;
+  padding:4px 8px;font-family:var(--mono);font-size:.78rem;color:var(--text);flex-shrink:0}
+.cfg-row input[type=range]{width:110px;flex-shrink:0}
+.cfg-range-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.cfg-range-wrap span{font-family:var(--mono);font-size:.75rem;color:var(--dim);min-width:24px;text-align:right}
+.cfg-pass-wrap{display:flex;gap:5px;flex-shrink:0}
+.cfg-pass-wrap button{font-size:.68rem;padding:3px 7px;border-radius:4px;
+  background:var(--border2);border:1px solid var(--border2);color:var(--dim);cursor:pointer}
+.cfg-warn-badge{font-size:.6rem;font-weight:400;letter-spacing:.04em;text-transform:none;
+  background:#ffa04022;color:#ffa040;border:1px solid #ffa04055;border-radius:10px;padding:1px 7px;margin-left:6px}
+.cfg-note{font-size:.72rem;color:var(--dim);background:#ffa04011;border:1px solid #ffa04033;
+  border-radius:5px;padding:7px 10px;line-height:1.5;margin-top:2px}
+.cfg-actions{display:flex;gap:8px;padding-top:4px}
+.cfg-save-btn{background:var(--accent);color:#000;border:none;border-radius:5px;
+  padding:6px 16px;font-size:.8rem;font-weight:700;cursor:pointer;letter-spacing:.05em}
+.cfg-reboot-btn{background:transparent;color:var(--red);border:1px solid var(--red);
+  border-radius:5px;padding:6px 16px;font-size:.8rem;cursor:pointer}
 .pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
   background:var(--pill-bg);color:var(--green);border:1px solid var(--pill-border);white-space:nowrap}
 .time-tog{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--dim)}
@@ -365,8 +394,12 @@ details[open] .chev{transform:rotate(180deg)}
 <body>
 <header>
   <div class="logo">&#9685;</div>
-  <h1>ESPiBright</h1>
+  <div class="hdr-title">
+    <h1>ESPiBright</h1>
+    <div class="build-lbl" id="build-lbl"></div>
+  </div>
   <div class="hdr-r">
+    <span class="bat-pill" id="bat-pill" title="Battery level">—</span>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark theme">☀</button>
     <div class="pill">&#9679; CONNECTED</div>
   </div>
@@ -588,6 +621,71 @@ details[open] .chev{transform:rotate(180deg)}
   </div>
 </div>
 
+<!-- Device Settings -->
+<div class="card">
+  <details id="d-devset">
+    <summary>
+      <div class="card-hdr sum-row" style="border-bottom:none">
+        <span class="card-title">Device Settings</span>
+        <span class="chev">▼</span>
+      </div>
+    </summary>
+    <div class="card-body">
+      <div class="settings-form">
+        <div class="sgrp-title">Transmission</div>
+        <div class="cfg-row">
+          <label>Burst repeat count<span class="cfg-unit">(1–20)</span></label>
+          <input type="number" id="cfg-repeat" min="1" max="20" value="5">
+        </div>
+        <div class="cfg-row">
+          <label>Send time packet after burst</label>
+          <input type="checkbox" id="cfg-time" checked>
+        </div>
+
+        <div class="sgrp-title">Display</div>
+        <div class="cfg-row">
+          <label>Screen timeout<span class="cfg-unit">seconds</span></label>
+          <input type="number" id="cfg-timeout" min="10" max="3600" value="180">
+        </div>
+        <div class="cfg-row">
+          <label>Brightness</label>
+          <div class="cfg-range-wrap">
+            <input type="range" id="cfg-bright" min="10" max="255" value="180">
+            <span id="cfg-bright-val">180</span>
+          </div>
+        </div>
+
+        <div class="sgrp-title">Network <span class="cfg-warn-badge">⚠ requires reboot</span></div>
+        <div class="cfg-row">
+          <label>Hostname</label>
+          <input type="text" id="cfg-host" maxlength="32" value="ESPiBright">
+        </div>
+        <div class="cfg-row">
+          <label>WiFi SSID</label>
+          <input type="text" id="cfg-ssid" maxlength="64">
+        </div>
+        <div class="cfg-row">
+          <label>WiFi Password</label>
+          <div class="cfg-pass-wrap">
+            <input type="password" id="cfg-pass" maxlength="64" placeholder="(unchanged)">
+            <button type="button" id="cfg-pass-show" onclick="cfgTogglePass()">show</button>
+          </div>
+        </div>
+        <div class="cfg-row">
+          <label>Timezone offset<span class="cfg-unit">hours, e.g. −5 for EST</span></label>
+          <input type="number" id="cfg-tz" min="-12" max="14" step="0.5" value="-5">
+        </div>
+        <div class="cfg-note">⚠ WiFi credentials are stored in device flash (unencrypted NVS). Setting the wrong SSID or password currently requires a reflash to recover WiFi access.</div>
+
+        <div class="cfg-actions">
+          <button class="cfg-save-btn" onclick="cfgSave()">Save Settings</button>
+          <button class="cfg-reboot-btn" onclick="cfgReboot()">Reboot</button>
+        </div>
+      </div>
+    </div>
+  </details>
+</div>
+
 <!-- Known Packets -->
 <div class="card">
   <details>
@@ -666,7 +764,7 @@ details[open] .chev{transform:rotate(180deg)}
         <tbody>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/packets</td><td class="ad">All known packets as JSON.</td></tr>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle, battery level, firmware build.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/index</td><td class="ad">Known packet by index. <code>{"index":0}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/raw</td><td class="ad">7-byte payload (CRC auto). <code>{"payload":"d0238a8a8601a6","send_time":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
@@ -677,6 +775,9 @@ details[open] .chev{transform:rotate(180deg)}
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1032,6 +1133,12 @@ async function poll(){
       document.getElementById('global-time').checked=j.send_time_global;
     if(typeof j.repeat_count!=='undefined')
       document.getElementById('tx-repeat').value=j.repeat_count;
+    if(typeof j.battery_pct!=='undefined'){
+      const bat=j.battery_pct,el=document.getElementById('bat-pill');
+      el.textContent='BAT '+bat+'%';
+      el.className='bat-pill '+(bat>50?'bat-ok':bat>20?'bat-warn':'bat-crit');
+    }
+    if(j.build){const bl=document.getElementById('build-lbl');if(bl&&!bl.textContent)bl.textContent='build '+j.build;}
   }catch(_){}
 }
 poll();setInterval(poll,10000);
@@ -1183,6 +1290,57 @@ async function loadDeviceState() {
     }
   } catch(e){}
 }
+// ── Device Settings ──────────────────────────────────────────────────────────
+document.getElementById('d-devset').addEventListener('toggle', function(){
+  if (this.open) cfgLoad();
+});
+async function cfgLoad() {
+  try {
+    const s = await api('/api/settings/device','GET');
+    if (s.repeat_count != null)      document.getElementById('cfg-repeat').value  = s.repeat_count;
+    if (s.time_enabled != null)      document.getElementById('cfg-time').checked   = s.time_enabled;
+    if (s.sleep_timeout_sec != null) document.getElementById('cfg-timeout').value  = s.sleep_timeout_sec;
+    if (s.brightness != null) {
+      document.getElementById('cfg-bright').value = s.brightness;
+      document.getElementById('cfg-bright-val').textContent = s.brightness;
+    }
+    if (s.hostname)   document.getElementById('cfg-host').value = s.hostname;
+    if (s.wifi_ssid)  document.getElementById('cfg-ssid').value = s.wifi_ssid;
+    if (s.tz_offset_sec != null)
+      document.getElementById('cfg-tz').value = (s.tz_offset_sec / 3600).toFixed(1).replace(/\.0$/,'');
+  } catch(e) {}
+}
+document.getElementById('cfg-bright').addEventListener('input', function(){
+  document.getElementById('cfg-bright-val').textContent = this.value;
+});
+function cfgTogglePass() {
+  const inp = document.getElementById('cfg-pass');
+  const btn = document.getElementById('cfg-pass-show');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'show' : 'hide';
+}
+async function cfgSave() {
+  const body = {
+    repeat_count:      parseInt(document.getElementById('cfg-repeat').value),
+    time_enabled:      document.getElementById('cfg-time').checked,
+    sleep_timeout_sec: parseInt(document.getElementById('cfg-timeout').value),
+    brightness:        parseInt(document.getElementById('cfg-bright').value),
+    hostname:          document.getElementById('cfg-host').value.trim(),
+    wifi_ssid:         document.getElementById('cfg-ssid').value.trim(),
+    tz_offset_sec:     Math.round(parseFloat(document.getElementById('cfg-tz').value) * 3600)
+  };
+  const pw = document.getElementById('cfg-pass').value;
+  if (pw) body.wifi_pass = pw;
+  const r = await api('/api/settings/device','POST', body);
+  if (r.ok) toast('Saved' + (r.reboot_required ? ' — reboot to apply network changes' : ''));
+  else      toast('Save failed: ' + (r.error || 'error'), true);
+}
+async function cfgReboot() {
+  if (!confirm('Reboot the device now?')) return;
+  await api('/api/reboot','POST',{});
+  toast('Rebooting…');
+}
+
 loadDeviceState();
 
 pollLog();

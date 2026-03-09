@@ -18,8 +18,14 @@ enum UIPage { PAGE_LIVE = 0, PAGE_SCHEDULE = 1, PAGE_SYSTEM = 2, PAGE_COUNT = 3 
 
 class Display {
 public:
-    String hostname  = "---";   // set by main after WiFi connects
-    String ipAddress = "---";   // set by main after WiFi connects
+    // Set by main after WiFi connects / settings load
+    String hostname  = "---";
+    String ipAddress = "---";
+    String wifiSsid  = WIFI_SSID;
+
+    // Runtime-settable (applied from DevSettings before begin())
+    uint32_t sleepTimeoutMs = SLEEP_TIMEOUT_MS;
+    uint8_t  wakebrightness = SLEEP_BRIGHTNESS;
 
     Display(ChannelState& ch, ScheduleState& sched,
             ClockState& clock, RFTransmitter& rf)

@@ -1,23 +1,74 @@
 #pragma once
 #include <Preferences.h>
+#include "config.h"
 #include "ChannelState.h"
 #include "ScheduleState.h"
 
+// ── DevSettings ───────────────────────────────────────────────────────────────
+// Device-level configuration persisted in NVS namespace "dev".
+// Fields that require a reboot to take effect are marked [reboot].
+// Defaults come from compile-time constants in config.h.
+
+struct DevSettings {
+    char    hostname[33]      = HOSTNAME;
+    char    wifiSsid[65]      = WIFI_SSID;
+    char    wifiPass[65]      = WIFI_PASS;
+    int     repeatCount       = TX_REPEAT;
+    bool    timeEnabled       = true;
+    uint16_t sleepTimeoutSec  = SLEEP_TIMEOUT_MS / 1000;
+    uint8_t brightness        = SLEEP_BRIGHTNESS;
+    int32_t tzOffsetSec       = TZ_OFFSET_SEC;
+};
+
 // ── Storage ───────────────────────────────────────────────────────────────────
-// Saves/loads channel and schedule state to ESP32 NVS (non-volatile storage).
+// Saves/loads channel, schedule, and device settings to ESP32 NVS.
 // Clock time is not persisted — it's meaningless after a reboot.
 //
 // Usage:
 //   Storage store;
-//   store.loadAll(channels, schedule);   // call in setup() before begin()
+//   store.loadSettings(settings);        // call first in setup()
+//   store.loadAll(channels, schedule);   // call before begin()
 //   store.saveChannels(channels);        // call after any channel change
 //   store.saveSchedule(schedule);        // call after any schedule change
+//   store.saveSettings(settings);        // call after any settings change
 
 class Storage {
 public:
     void loadAll(ChannelState& ch, ScheduleState& sched) {
         loadChannels(ch);
         loadSchedule(sched);
+    }
+
+    void loadSettings(DevSettings& s) {
+        Preferences p;
+        if (!p.begin("dev", true)) return;
+        auto str = [&](const char* k, char* dst, size_t n) {
+            String v = p.getString(k, "");
+            if (v.length()) { strncpy(dst, v.c_str(), n - 1); dst[n - 1] = '\0'; }
+        };
+        str("host",  s.hostname, sizeof(s.hostname));
+        str("ssid",  s.wifiSsid, sizeof(s.wifiSsid));
+        str("pass",  s.wifiPass, sizeof(s.wifiPass));
+        s.repeatCount    = p.getInt   ("rpt",   s.repeatCount);
+        s.timeEnabled    = p.getBool  ("te",    s.timeEnabled);
+        s.sleepTimeoutSec= p.getUShort("stSec", s.sleepTimeoutSec);
+        s.brightness     = p.getUChar ("bright",s.brightness);
+        s.tzOffsetSec    = p.getInt   ("tz",    s.tzOffsetSec);
+        p.end();
+    }
+
+    void saveSettings(const DevSettings& s) {
+        Preferences p;
+        p.begin("dev", false);
+        p.putString("host",  s.hostname);
+        p.putString("ssid",  s.wifiSsid);
+        p.putString("pass",  s.wifiPass);
+        p.putInt   ("rpt",   s.repeatCount);
+        p.putBool  ("te",    s.timeEnabled);
+        p.putUShort("stSec", s.sleepTimeoutSec);
+        p.putUChar ("bright",s.brightness);
+        p.putInt   ("tz",    s.tzOffsetSec);
+        p.end();
     }
 
     void saveChannels(const ChannelState& ch) {
@@ -49,7 +100,7 @@ public:
 private:
     void loadChannels(ChannelState& ch) {
         Preferences p;
-        if (!p.begin("ch", true)) return;   // true = read-only; returns false if namespace is new
+        if (!p.begin("ch", true)) return;
         ch.whiteOn    = p.getBool ("w_on", ch.whiteOn);
         ch.whiteLevel = p.getUChar("w_lv", ch.whiteLevel);
         ch.blueOn     = p.getBool ("b_on", ch.blueOn);

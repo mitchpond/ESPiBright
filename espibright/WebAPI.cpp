@@ -1,5 +1,6 @@
 #include "WebAPI.h"
 #include <ESPmDNS.h>
+#include <M5Unified.h>
 #include "config.h"
 #include "html.h"
 
@@ -81,6 +82,9 @@ void WebAPI::begin() {
     server_.on("/api/schedule/send",       HTTP_POST, [this](){ handleScheduleSend_(); });
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
     server_.on("/api/settings/repeat",     HTTP_POST, [this](){ handleRepeatSet_(); });
+    server_.on("/api/settings/device",     HTTP_GET,  [this](){ handleSettingsDevGet_(); });
+    server_.on("/api/settings/device",     HTTP_POST, [this](){ handleSettingsDevPost_(); });
+    server_.on("/api/reboot",              HTTP_POST, [this](){ handleReboot_(); });
     server_.onNotFound([this](){
         server_.send(404, "application/json", "{\"error\":\"not found\"}");
     });
@@ -89,7 +93,8 @@ void WebAPI::begin() {
         "/api/send/index", "/api/send/raw", "/api/send/channels",
         "/api/time/set", "/api/time/send", "/api/time/ntp",
         "/api/schedule/set", "/api/schedule/send",
-        "/api/settings/time_global", "/api/settings/repeat"
+        "/api/settings/time_global", "/api/settings/repeat",
+        "/api/settings/device", "/api/reboot"
     };
     for (auto r : corsPaths)
         server_.on(r, HTTP_OPTIONS, [this](){ handleOptions_(); });
@@ -119,11 +124,14 @@ void WebAPI::handleApiPackets_() {
 
 void WebAPI::handleApiStatus_() {
     sendCors_();
+    int8_t bat = M5.Power.getBatteryLevel();
     String j = "{\"label\":\""  + String(rf_.lastLabel) + "\""
              + ",\"hex\":\""    + String(rf_.lastHex)   + "\""
              + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))
              + ",\"send_time_global\":" + (rf_.timeEnabled ? "true" : "false")
              + ",\"repeat_count\":"    + rf_.repeatCount
+             + ",\"battery_pct\":"     + bat
+             + ",\"build\":\""         + FW_BUILD + "\""
              + ",\"time\":{\"hh\":" + clock_.hh
              + ",\"mm\":"           + clock_.mm
              + ",\"ss\":"           + clock_.ss + "}}";
@@ -275,7 +283,7 @@ void WebAPI::handleTimeSend_() {
 
 void WebAPI::handleTimeNtp_() {
     sendCors_();
-    bool ok = clock_.syncNtp(TZ_OFFSET_SEC);
+    bool ok = clock_.syncNtp(devSettings.tzOffsetSec);
     if (ok) {
         String r = String("{\"ok\":true,\"hh\":") + clock_.hh
                  + ",\"mm\":" + clock_.mm
@@ -329,6 +337,8 @@ void WebAPI::handleTimeGlobal_() {
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
     rf_.timeEnabled = doc["enabled"] | rf_.timeEnabled;
+    devSettings.timeEnabled = rf_.timeEnabled;
+    store_.saveSettings(devSettings);
     server_.send(200, "application/json", JSON_OK);
 }
 
@@ -342,7 +352,87 @@ void WebAPI::handleRepeatSet_() {
         return;
     }
     rf_.repeatCount = n;
+    devSettings.repeatCount = n;
+    store_.saveSettings(devSettings);
     server_.send(200, "application/json", JSON_OK);
+}
+
+
+void WebAPI::handleSettingsDevGet_() {
+    sendCors_();
+    String j = String("{")
+             + ""repeat_count":"     + rf_.repeatCount
+             + ","time_enabled":"    + (rf_.timeEnabled ? "true" : "false")
+             + ","sleep_timeout_sec":"+ (display_.sleepTimeoutMs / 1000)
+             + ","brightness":"      + display_.wakebrightness
+             + ","hostname":""      + String(devSettings.hostname) + """
+             + ","wifi_ssid":""     + String(devSettings.wifiSsid) + """
+             + ","wifi_pass":"***""
+             + ","tz_offset_sec":"   + devSettings.tzOffsetSec
+             + "}";
+    server_.send(200, "application/json", j);
+}
+
+void WebAPI::handleSettingsDevPost_() {
+    sendCors_();
+    JsonDocument doc;
+    if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+
+    bool rebootRequired = false;
+
+    if (!doc["repeat_count"].isNull()) {
+        int n = doc["repeat_count"].as<int>();
+        if (n >= 1 && n <= 20) { rf_.repeatCount = n; devSettings.repeatCount = n; }
+    }
+    if (!doc["time_enabled"].isNull()) {
+        rf_.timeEnabled = doc["time_enabled"].as<bool>();
+        devSettings.timeEnabled = rf_.timeEnabled;
+    }
+    if (!doc["sleep_timeout_sec"].isNull()) {
+        int t = doc["sleep_timeout_sec"].as<int>();
+        if (t >= 10 && t <= 3600) {
+            display_.sleepTimeoutMs = (uint32_t)t * 1000;
+            devSettings.sleepTimeoutSec = (uint16_t)t;
+        }
+    }
+    if (!doc["brightness"].isNull()) {
+        int b = doc["brightness"].as<int>();
+        if (b >= 0 && b <= 255) {
+            display_.wakebrightness = (uint8_t)b;
+            devSettings.brightness  = (uint8_t)b;
+        }
+    }
+    if (!doc["hostname"].isNull()) {
+        const char* h = doc["hostname"].as<const char*>();
+        strncpy(devSettings.hostname, h, sizeof(devSettings.hostname) - 1);
+        rebootRequired = true;
+    }
+    if (!doc["wifi_ssid"].isNull()) {
+        const char* s = doc["wifi_ssid"].as<const char*>();
+        strncpy(devSettings.wifiSsid, s, sizeof(devSettings.wifiSsid) - 1);
+        rebootRequired = true;
+    }
+    if (!doc["wifi_pass"].isNull()) {
+        const char* pw = doc["wifi_pass"].as<const char*>();
+        strncpy(devSettings.wifiPass, pw, sizeof(devSettings.wifiPass) - 1);
+        rebootRequired = true;
+    }
+    if (!doc["tz_offset_sec"].isNull()) {
+        devSettings.tzOffsetSec = doc["tz_offset_sec"].as<int32_t>();
+        rebootRequired = true;
+    }
+
+    store_.saveSettings(devSettings);
+    String r = String("{"ok":true,"reboot_required":")
+             + (rebootRequired ? "true" : "false") + "}";
+    server_.send(200, "application/json", r);
+}
+
+void WebAPI::handleReboot_() {
+    sendCors_();
+    server_.send(200, "application/json", JSON_OK);
+    delay(200);
+    ESP.restart();
 }
 
 void WebAPI::handleOptions_() {

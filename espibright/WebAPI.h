@@ -6,6 +6,7 @@
 #include "ChannelState.h"
 #include "ScheduleState.h"
 #include "ClockState.h"
+#include "Display.h"
 #include "Storage.h"
 #include "TxLog.h"
 
@@ -27,12 +28,15 @@ class WebAPI {
 public:
     WebAPI(RFTransmitter& rf, ChannelState& ch,
            ScheduleState& sched, ClockState& clock,
-           TxLog& log, Storage& store)
+           TxLog& log, Storage& store, Display& display)
         : rf_(rf), ch_(ch), sched_(sched), clock_(clock),
-          log_(log), store_(store), server_(80) {}
+          log_(log), store_(store), display_(display), server_(80) {}
 
     void begin();
     void handle() { server_.handleClient(); }
+
+    // Kept in sync with NVS; set from espibright.ino before begin()
+    DevSettings devSettings;
 
 private:
     RFTransmitter& rf_;
@@ -41,6 +45,7 @@ private:
     ClockState&    clock_;
     TxLog&         log_;
     Storage&       store_;
+    Display&       display_;
     WebServer      server_;
 
     KnownPacket knownPkts_[14];
@@ -69,5 +74,8 @@ private:
     void handleScheduleSend_();
     void handleTimeGlobal_();
     void handleRepeatSet_();
+    void handleSettingsDevGet_();
+    void handleSettingsDevPost_();
+    void handleReboot_();
     void handleOptions_();
 };

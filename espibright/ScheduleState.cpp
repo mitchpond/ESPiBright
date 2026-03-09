@@ -37,17 +37,10 @@ void ScheduleState::send() {
     buildRgbSlotPkt_(pkts[5], rgbOn,   0x08);
     buildRgbSlotPkt_(pkts[6], rgbOff,  0x09);
 
-    rf_.log().begin("SCHEDULE");
-    for (int rep = 0; rep < rf_.repeatCount; rep++)
-        for (int i = 0; i < 7; i++)
-            rf_.transmitOnce(pkts[i]);
+    rf_.clearBuf();
     for (int i = 0; i < 7; i++)
-        rf_.log().addPkt(pkts[i], notes[i]);
-    rf_.log().commit();
-
-    // recordTx via sendPkt not available here (no single "representative" pkt),
-    // so update lastLabel/lastHex directly and fire callback
-    rf_.recordTx(pkts[0], "SCHEDULE");
+        rf_.addToBuf(pkts[i], notes[i]);
+    rf_.flush("SCHEDULE");
 }
 
 int ScheduleState::minutesUntilNext(uint8_t hh, uint8_t mm, const char** labelOut) const {
