@@ -74,6 +74,7 @@ private:
     void handleScheduleSend_();
     void handleTimeGlobal_();
     void handleRepeatSet_();
+    void handlePacketGapSet_();
     void handleSettingsDevGet_();
     void handleSettingsDevPost_();
     void handleReboot_();

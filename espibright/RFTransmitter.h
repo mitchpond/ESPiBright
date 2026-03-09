@@ -51,8 +51,9 @@ public:
     // Access CRC table for external packet builders
     const uint8_t* crcTable() const { return crcTable_; }
 
-    bool timeEnabled = true;      // global +TIME toggle
-    int  repeatCount = TX_REPEAT; // batch repeat count (1–20, set via API)
+    bool timeEnabled = true;           // global +TIME toggle
+    int  repeatCount  = TX_REPEAT;     // batch repeat count (1–20, set via API)
+    int  packetGapMs  = TX_PACKET_GAP_MS; // ms gap between burst repeats (0–1000)
 
     // Last TX info (read by WebAPI / Display)
     char          lastLabel[48] = "none";

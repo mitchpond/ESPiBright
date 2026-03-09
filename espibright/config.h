@@ -15,6 +15,8 @@
 // Number of times each packet burst is repeated per send.
 // Increase if the fixture misses commands due to RF interference.
 #define TX_REPEAT    5
+// Inter-packet gap in ms inserted between burst repeats.
+#define TX_PACKET_GAP_MS  1
 
 // ── Display ───────────────────────────────────────────────────────────────────
 #define SLEEP_TIMEOUT_MS  (3 * 60 * 1000)  // blank screen after 3 min idle

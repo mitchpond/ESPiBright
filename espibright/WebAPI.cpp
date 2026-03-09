@@ -82,6 +82,7 @@ void WebAPI::begin() {
     server_.on("/api/schedule/send",       HTTP_POST, [this](){ handleScheduleSend_(); });
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
     server_.on("/api/settings/repeat",     HTTP_POST, [this](){ handleRepeatSet_(); });
+    server_.on("/api/settings/packet_gap", HTTP_POST, [this](){ handlePacketGapSet_(); });
     server_.on("/api/settings/device",     HTTP_GET,  [this](){ handleSettingsDevGet_(); });
     server_.on("/api/settings/device",     HTTP_POST, [this](){ handleSettingsDevPost_(); });
     server_.on("/api/reboot",              HTTP_POST, [this](){ handleReboot_(); });
@@ -94,7 +95,7 @@ void WebAPI::begin() {
         "/api/time/set", "/api/time/send", "/api/time/ntp",
         "/api/schedule/set", "/api/schedule/send",
         "/api/settings/time_global", "/api/settings/repeat",
-        "/api/settings/device", "/api/reboot"
+        "/api/settings/packet_gap", "/api/settings/device", "/api/reboot"
     };
     for (auto r : corsPaths)
         server_.on(r, HTTP_OPTIONS, [this](){ handleOptions_(); });
@@ -130,6 +131,7 @@ void WebAPI::handleApiStatus_() {
              + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))
              + ",\"send_time_global\":" + (rf_.timeEnabled ? "true" : "false")
              + ",\"repeat_count\":"    + rf_.repeatCount
+             + ",\"packet_gap_ms\":"   + rf_.packetGapMs
              + ",\"battery_pct\":"     + bat
              + ",\"build\":\""         + FW_BUILD + "\""
              + ",\"time\":{\"hh\":" + clock_.hh
@@ -358,17 +360,32 @@ void WebAPI::handleRepeatSet_() {
 }
 
 
+void WebAPI::handlePacketGapSet_() {
+    sendCors_();
+    JsonDocument doc;
+    if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+    int g = doc["gap_ms"] | -1;
+    if (g < 0 || g > 1000) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"gap_ms must be 0-1000\"}");
+        return;
+    }
+    rf_.packetGapMs = g;
+    devSettings.packetGapMs = g;
+    store_.saveSettings(devSettings);
+    server_.send(200, "application/json", JSON_OK);
+}
+
 void WebAPI::handleSettingsDevGet_() {
     sendCors_();
-    String j = String("{")
-             + ""repeat_count":"     + rf_.repeatCount
-             + ","time_enabled":"    + (rf_.timeEnabled ? "true" : "false")
-             + ","sleep_timeout_sec":"+ (display_.sleepTimeoutMs / 1000)
-             + ","brightness":"      + display_.wakebrightness
-             + ","hostname":""      + String(devSettings.hostname) + """
-             + ","wifi_ssid":""     + String(devSettings.wifiSsid) + """
-             + ","wifi_pass":"***""
-             + ","tz_offset_sec":"   + devSettings.tzOffsetSec
+    String j = String("{\"repeat_count\":")      + rf_.repeatCount
+             + ",\"packet_gap_ms\":"             + rf_.packetGapMs
+             + ",\"time_enabled\":"              + (rf_.timeEnabled ? "true" : "false")
+             + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeoutMs / 1000)
+             + ",\"brightness\":"               + display_.wakebrightness
+             + ",\"hostname\":\""               + String(devSettings.hostname) + "\""
+             + ",\"wifi_ssid\":\""              + String(devSettings.wifiSsid) + "\""
+             + ",\"wifi_pass\":\"***\""
+             + ",\"tz_offset_sec\":"             + devSettings.tzOffsetSec
              + "}";
     server_.send(200, "application/json", j);
 }
@@ -383,6 +400,10 @@ void WebAPI::handleSettingsDevPost_() {
     if (!doc["repeat_count"].isNull()) {
         int n = doc["repeat_count"].as<int>();
         if (n >= 1 && n <= 20) { rf_.repeatCount = n; devSettings.repeatCount = n; }
+    }
+    if (!doc["packet_gap_ms"].isNull()) {
+        int g = doc["packet_gap_ms"].as<int>();
+        if (g >= 0 && g <= 1000) { rf_.packetGapMs = g; devSettings.packetGapMs = g; }
     }
     if (!doc["time_enabled"].isNull()) {
         rf_.timeEnabled = doc["time_enabled"].as<bool>();
@@ -423,7 +444,7 @@ void WebAPI::handleSettingsDevPost_() {
     }
 
     store_.saveSettings(devSettings);
-    String r = String("{"ok":true,"reboot_required":")
+    String r = String("{\"ok\":true,\"reboot_required\":")
              + (rebootRequired ? "true" : "false") + "}";
     server_.send(200, "application/json", r);
 }
