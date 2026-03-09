@@ -8,27 +8,40 @@
 
 // ── RFTransmitter ─────────────────────────────────────────────────────────────
 // Owns the RMT peripheral, CRC table, and TX log.
-// Higher-level state classes call sendPkt() which handles burst + logging.
+//
+// Transmission model — buffer-and-flush:
+//   1. clearBuf()           — reset the packet buffer
+//   2. addToBuf(p8, note)   — append a packet (up to BUF_CAP)
+//   3. flush(label)         — repeat the whole buffer repeatCount times,
+//                             with a 1 ms gap between full-batch repeats,
+//                             then log and fire onTransmit
+//
+// sendPkt() and sendTimePackets() use this internally; callers that need to
+// send a heterogeneous burst (e.g. ScheduleState) may call the buffer API
+// directly.
 
 class RFTransmitter {
 public:
-    // Set this before any transmissions to get a flash callback on every TX
-    std::function<void()> onTransmit;
+    std::function<void()> onTransmit;   // optional callback fired after every flush
 
     explicit RFTransmitter(TxLog& log) : log_(log) {}
 
     void begin();
 
-    // Raw single transmission (no log, no burst)
+    // Raw single transmission — no repeat, no log
     void transmitOnce(const uint8_t* p8);
 
-    // Transmit p ×3 with 1ms gap
-    void tx3(const uint8_t* p8);
+    // ── Buffer API ────────────────────────────────────────────────────────────
+    void clearBuf();
+    void addToBuf(const uint8_t* p8, const char* note);
+    // Repeat buffer repeatCount times (1 ms between batches), log, fire callback
+    void flush(const char* label);
 
-    // Full burst: CMD×3 [+ HMS×3 if withTime && timeEnabled], log, fire onTransmit
+    // ── Convenience wrappers ─────────────────────────────────────────────────
+    // CMD [+ HMS if withTime && timeEnabled], repeated as a batch
     void sendPkt(const uint8_t* p8, bool withTime, const char* label);
 
-    // Build and send a time HMS packet
+    // Build and send a time HMS packet burst
     void sendTimePackets(uint8_t hh, uint8_t mm, uint8_t ss, const char* label);
 
     // Packet builder (wraps Protocol::buildPacket with our CRC table)
@@ -37,26 +50,30 @@ public:
     // Access CRC table for external packet builders
     const uint8_t* crcTable() const { return crcTable_; }
 
-    bool timeEnabled = true;   // global +TIME toggle
-    int  repeatCount = TX_REPEAT; // burst repeat count (set via API or config)
+    bool timeEnabled = true;      // global +TIME toggle
+    int  repeatCount = TX_REPEAT; // batch repeat count (1–20, set via API)
 
     // Last TX info (read by WebAPI / Display)
     char          lastLabel[48] = "none";
     char          lastHex[20]   = "--";
     unsigned long lastMs        = 0;
 
-    // Public log access (needed by ScheduleState which builds its own burst)
-    TxLog& log() { return log_; }
-
-    // Record a TX without transmitting (for callers that manage their own burst)
-    void recordTx(const uint8_t* p8, const char* label);
-
 private:
+    static constexpr int BUF_CAP = 16;
+
+    struct BufPkt {
+        uint8_t pkt[8];
+        char    note[12];
+    };
+
     TxLog&               log_;
     rmt_channel_handle_t chan_    = nullptr;
     rmt_encoder_handle_t encoder_ = nullptr;
     uint8_t              crcTable_[256];
     uint8_t              pktTimeHms_[8];
+
+    BufPkt  buf_[BUF_CAP];
+    int     bufN_ = 0;
 
     void recordTx_(const uint8_t* p8, const char* label);
 };
