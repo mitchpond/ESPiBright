@@ -1,5 +1,6 @@
 #include "WebAPI.h"
 #include <ESPmDNS.h>
+#include <M5Unified.h>
 #include "config.h"
 #include "html.h"
 
@@ -119,11 +120,14 @@ void WebAPI::handleApiPackets_() {
 
 void WebAPI::handleApiStatus_() {
     sendCors_();
+    int8_t bat = M5.Power.getBatteryLevel();
     String j = "{\"label\":\""  + String(rf_.lastLabel) + "\""
              + ",\"hex\":\""    + String(rf_.lastHex)   + "\""
              + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))
              + ",\"send_time_global\":" + (rf_.timeEnabled ? "true" : "false")
              + ",\"repeat_count\":"    + rf_.repeatCount
+             + ",\"battery_pct\":"     + bat
+             + ",\"build\":\""         + FW_BUILD + "\""
              + ",\"time\":{\"hh\":" + clock_.hh
              + ",\"mm\":"           + clock_.mm
              + ",\"ss\":"           + clock_.ss + "}}";

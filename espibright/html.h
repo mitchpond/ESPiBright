@@ -69,8 +69,13 @@ header{background:var(--panel);border-bottom:1px solid var(--border);padding:13p
 .logo{width:30px;height:30px;border:2px solid var(--accent);border-radius:5px;
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-size:13px;color:var(--accent);flex-shrink:0}
-header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title);flex:1}
+header h1{font-size:.9rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--hdr-title)}
+.hdr-title{flex:1;min-width:0}
+.build-lbl{font-family:var(--mono);font-size:.52rem;color:var(--dim);letter-spacing:.04em;margin-top:1px}
 .hdr-r{display:flex;align-items:center;gap:10px}
+.bat-pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
+  background:var(--border2);color:var(--dim);border:1px solid var(--border2);white-space:nowrap}
+.bat-ok{color:var(--green)}.bat-warn{color:#ffa040}.bat-crit{color:var(--red)}
 .pill{font-family:var(--mono);font-size:.62rem;padding:3px 9px;border-radius:20px;
   background:var(--pill-bg);color:var(--green);border:1px solid var(--pill-border);white-space:nowrap}
 .time-tog{display:flex;align-items:center;gap:7px;font-size:.72rem;color:var(--dim)}
@@ -365,8 +370,12 @@ details[open] .chev{transform:rotate(180deg)}
 <body>
 <header>
   <div class="logo">&#9685;</div>
-  <h1>ESPiBright</h1>
+  <div class="hdr-title">
+    <h1>ESPiBright</h1>
+    <div class="build-lbl" id="build-lbl"></div>
+  </div>
   <div class="hdr-r">
+    <span class="bat-pill" id="bat-pill" title="Battery level">—</span>
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark theme">☀</button>
     <div class="pill">&#9679; CONNECTED</div>
   </div>
@@ -666,7 +675,7 @@ details[open] .chev{transform:rotate(180deg)}
         <tbody>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/packets</td><td class="ad">All known packets as JSON.</td></tr>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle, battery level, firmware build.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/index</td><td class="ad">Known packet by index. <code>{"index":0}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/raw</td><td class="ad">7-byte payload (CRC auto). <code>{"payload":"d0238a8a8601a6","send_time":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
@@ -1032,6 +1041,12 @@ async function poll(){
       document.getElementById('global-time').checked=j.send_time_global;
     if(typeof j.repeat_count!=='undefined')
       document.getElementById('tx-repeat').value=j.repeat_count;
+    if(typeof j.battery_pct!=='undefined'){
+      const bat=j.battery_pct,el=document.getElementById('bat-pill');
+      el.textContent='BAT '+bat+'%';
+      el.className='bat-pill '+(bat>50?'bat-ok':bat>20?'bat-warn':'bat-crit');
+    }
+    if(j.build){const bl=document.getElementById('build-lbl');if(bl&&!bl.textContent)bl.textContent='build '+j.build;}
   }catch(_){}
 }
 poll();setInterval(poll,10000);
