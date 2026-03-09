@@ -53,7 +53,7 @@ public:
 
     bool timeEnabled = true;           // global +TIME toggle
     int  repeatCount  = TX_REPEAT;     // batch repeat count (1–20, set via API)
-    int  packetGapMs  = TX_PACKET_GAP_MS; // ms gap between burst repeats (0–1000)
+    int  packetGapMs  = TX_PACKET_GAP_MS; // ms delay between each individual packet in a burst (0–1000)
 
     // Last TX info (read by WebAPI / Display)
     char          lastLabel[48] = "none";

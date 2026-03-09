@@ -719,7 +719,7 @@ window.fetch=function(url,opts){
           <span class="cfg-lbl">Inter-packet gap</span>
           <div style="display:flex;align-items:center;gap:8px">
             <input type="number" class="num" id="cfg-gap" min="0" max="1000" value="1" style="width:60px">
-            <span class="pct">ms between repeats (0–1000)</span>
+            <span class="pct">ms between each packet in burst (0–1000)</span>
           </div>
         </div>
         <div class="cfg-row">
@@ -836,7 +836,7 @@ window.fetch=function(url,opts){
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/packet_gap</td><td class="ad">Set inter-packet gap between burst repeats (0–1000 ms). <code>{"gap_ms":1}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/packet_gap</td><td class="ad">Set delay between each individual packet in a burst (0–1000 ms). <code>{"gap_ms":1}</code></td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
