@@ -126,12 +126,12 @@ void WebAPI::handleApiPackets_() {
 void WebAPI::handleApiStatus_() {
     sendCors_();
     int bat = M5.Power.getBatteryLevel();
-    String j = "{\"label\":\""  + String(rf_.lastLabel) + "\""
-             + ",\"hex\":\""    + String(rf_.lastHex)   + "\""
-             + ",\"ms_ago\":"   + (rf_.lastMs ? String(millis() - rf_.lastMs) : String("null"))
-             + ",\"send_time_global\":" + (rf_.timeEnabled ? "true" : "false")
-             + ",\"repeat_count\":"    + rf_.repeatCount
-             + ",\"packet_gap_ms\":"   + rf_.packetGapMs
+    String j = "{\"label\":\""  + String(rf_.lastLabel()) + "\""
+             + ",\"hex\":\""    + String(rf_.lastHex())   + "\""
+             + ",\"ms_ago\":"   + (rf_.lastMs() ? String(millis() - rf_.lastMs()) : String("null"))
+             + ",\"send_time_global\":" + (rf_.timeEnabled() ? "true" : "false")
+             + ",\"repeat_count\":"    + rf_.repeatCount()
+             + ",\"packet_gap_ms\":"   + rf_.packetGapMs()
              + ",\"battery_pct\":"     + bat
              + ",\"build\":\""         + FW_BUILD + "\""
              + ",\"time\":{\"hh\":" + clock_.hh
@@ -267,8 +267,8 @@ void WebAPI::handleSendChannels_() {
     ch_.rgbLevel   = doc["rgb_level"]   | ch_.rgbLevel;
     ch_.send();
     store_.saveChannels(ch_);
-    String r = String("{\"ok\":true,\"label\":\"") + rf_.lastLabel
-             + "\",\"hex\":\"" + rf_.lastHex + "\"}";
+    String r = String("{\"ok\":true,\"label\":\"") + rf_.lastLabel()
+             + "\",\"hex\":\"" + rf_.lastHex() + "\"}";
     server_.send(200, "application/json", r);
 }
 
@@ -342,8 +342,8 @@ void WebAPI::handleTimeGlobal_() {
     sendCors_();
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
-    rf_.timeEnabled = doc["enabled"] | rf_.timeEnabled;
-    store_.settings.timeEnabled = rf_.timeEnabled;
+    rf_.setTimeEnabled(doc["enabled"] | rf_.timeEnabled());
+    store_.settings.timeEnabled = rf_.timeEnabled();
     store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
@@ -357,8 +357,8 @@ void WebAPI::handleRepeatSet_() {
         server_.send(400, "application/json", "{\"ok\":false,\"error\":\"count must be 1-20\"}");
         return;
     }
-    rf_.repeatCount = n;
-    store_.settings.repeatCount = n;
+    rf_.setRepeatCount(n);
+    store_.settings.repeatCount = rf_.repeatCount();
     store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
@@ -373,17 +373,17 @@ void WebAPI::handlePacketGapSet_() {
         server_.send(400, "application/json", "{\"ok\":false,\"error\":\"gap_ms must be 0-1000\"}");
         return;
     }
-    rf_.packetGapMs = g;
-    store_.settings.packetGapMs = g;
+    rf_.setPacketGapMs(g);
+    store_.settings.packetGapMs = rf_.packetGapMs();
     store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
 
 void WebAPI::handleSettingsDevGet_() {
     sendCors_();
-    String j = String("{\"repeat_count\":")      + rf_.repeatCount
-             + ",\"packet_gap_ms\":"             + rf_.packetGapMs
-             + ",\"time_enabled\":"              + (rf_.timeEnabled ? "true" : "false")
+    String j = String("{\"repeat_count\":")      + rf_.repeatCount()
+             + ",\"packet_gap_ms\":"             + rf_.packetGapMs()
+             + ",\"time_enabled\":"              + (rf_.timeEnabled() ? "true" : "false")
              + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeout() / 1000)
              + ",\"brightness\":"               + display_.wakeBrightness()
              + ",\"hostname\":\""               + String(store_.settings.hostname) + "\""
@@ -403,15 +403,15 @@ void WebAPI::handleSettingsDevPost_() {
 
     if (!doc["repeat_count"].isNull()) {
         int n = doc["repeat_count"].as<int>();
-        if (n >= 1 && n <= 20) { rf_.repeatCount = n; store_.settings.repeatCount = n; }
+        if (n >= 1 && n <= 20) { rf_.setRepeatCount(n); store_.settings.repeatCount = rf_.repeatCount(); }
     }
     if (!doc["packet_gap_ms"].isNull()) {
         int g = doc["packet_gap_ms"].as<int>();
-        if (g >= 0 && g <= 1000) { rf_.packetGapMs = g; store_.settings.packetGapMs = g; }
+        if (g >= 0 && g <= 1000) { rf_.setPacketGapMs(g); store_.settings.packetGapMs = rf_.packetGapMs(); }
     }
     if (!doc["time_enabled"].isNull()) {
-        rf_.timeEnabled = doc["time_enabled"].as<bool>();
-        store_.settings.timeEnabled = rf_.timeEnabled;
+        rf_.setTimeEnabled(doc["time_enabled"].as<bool>());
+        store_.settings.timeEnabled = rf_.timeEnabled();
     }
     if (!doc["sleep_timeout_sec"].isNull()) {
         int t = doc["sleep_timeout_sec"].as<int>();

@@ -57,14 +57,20 @@ public:
     // Access CRC table for external packet builders
     const uint8_t* crcTable() const { return crcTable_; }
 
-    bool timeEnabled = true;           // global +TIME toggle
-    int  repeatCount  = TX_REPEAT;     // burst repeat count (1–20, set via API)
-    int  packetGapMs  = TX_PACKET_GAP_MS; // ms delay between each individual packet in a burst (0–1000)
+    // ── Configurable TX settings ──────────────────────────────────────────────
+    // Setters enforce valid ranges; callers do not need to pre-validate.
+    void setTimeEnabled(bool en) { timeEnabled_  = en; }
+    void setRepeatCount(int n)   { repeatCount_  = constrain(n,  1,   20); }
+    void setPacketGapMs(int ms)  { packetGapMs_  = constrain(ms, 0, 1000); }
 
-    // Last TX info (read by WebAPI / Display)
-    char          lastLabel[48] = "none";
-    char          lastHex[20]   = "--";
-    unsigned long lastMs        = 0;
+    bool timeEnabled()  const { return timeEnabled_; }
+    int  repeatCount()  const { return repeatCount_; }
+    int  packetGapMs()  const { return packetGapMs_; }
+
+    // ── Last TX metadata (read-only; written by recordTx_) ────────────────────
+    const char*   lastLabel() const { return lastLabel_; }
+    const char*   lastHex()   const { return lastHex_; }
+    unsigned long lastMs()    const { return lastMs_; }
 
 private:
     static constexpr int BUF_CAP = 16;
@@ -73,6 +79,13 @@ private:
         uint8_t pkt[8];
         char    note[12];
     };
+
+    bool          timeEnabled_  = true;
+    int           repeatCount_  = TX_REPEAT;
+    int           packetGapMs_  = TX_PACKET_GAP_MS;
+    char          lastLabel_[48] = "none";
+    char          lastHex_[20]   = "--";
+    unsigned long lastMs_        = 0;
 
     TxLog&               log_;
     rmt_channel_handle_t chan_    = nullptr;

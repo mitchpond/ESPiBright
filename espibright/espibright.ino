@@ -52,9 +52,9 @@ void setup() {
     display.drawConnecting();
 
     // Apply TX settings
-    rf.repeatCount = s.repeatCount;
-    rf.packetGapMs = s.packetGapMs;
-    rf.timeEnabled = s.timeEnabled;
+    rf.setRepeatCount(s.repeatCount);
+    rf.setPacketGapMs(s.packetGapMs);
+    rf.setTimeEnabled(s.timeEnabled);
 
     // Restore persisted channel/schedule state before anything transmits
     store.loadAll(channels, schedule);

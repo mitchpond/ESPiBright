@@ -58,10 +58,10 @@ void RFTransmitter::flush(const char* label) {
     if (bufN_ == 0 && tailN_ == 0) return;
 
     // Repeated section
-    for (int rep = 0; rep < repeatCount; rep++) {
+    for (int rep = 0; rep < repeatCount_; rep++) {
         for (int i = 0; i < bufN_; i++)
             transmitOnce(buf_[i].pkt);
-        if (rep < repeatCount - 1 && packetGapMs > 0) delay(packetGapMs);
+        if (rep < repeatCount_ - 1 && packetGapMs_ > 0) delay(packetGapMs_);
     }
     // Tail section — once, after all repeats
     for (int i = 0; i < tailN_; i++)
@@ -82,7 +82,7 @@ void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
 void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label) {
     clearBuf();
     addToBuf(p8, "CMD");
-    if (withTime && timeEnabled && getTime) {
+    if (withTime && timeEnabled_ && getTime) {
         uint8_t hh, mm, ss;
         getTime(hh, mm, ss);
         uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
@@ -103,12 +103,12 @@ void RFTransmitter::sendTimePackets(uint8_t hh, uint8_t mm, uint8_t ss, const ch
 }
 
 void RFTransmitter::recordTx_(const uint8_t* p8, const char* label) {
-    strncpy(lastLabel, label, sizeof(lastLabel) - 1);
-    lastLabel[sizeof(lastLabel) - 1] = '\0';
-    snprintf(lastHex, sizeof(lastHex),
+    strncpy(lastLabel_, label, sizeof(lastLabel_) - 1);
+    lastLabel_[sizeof(lastLabel_) - 1] = '\0';
+    snprintf(lastHex_, sizeof(lastHex_),
              "%02x%02x%02x%02x%02x%02x%02x%02x",
              p8[0], p8[1], p8[2], p8[3], p8[4], p8[5], p8[6], p8[7]);
-    lastMs = millis();
-    Serial.printf("[TX] %-24s %s\n", lastLabel, lastHex);
+    lastMs_ = millis();
+    Serial.printf("[TX] %-24s %s\n", lastLabel_, lastHex_);
     if (onTransmit) onTransmit();
 }
