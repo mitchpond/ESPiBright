@@ -381,13 +381,13 @@ void WebAPI::handlePacketGapSet_() {
 
 void WebAPI::handleSettingsDevGet_() {
     sendCors_();
-    String j = String("{\"repeat_count\":")      + rf_.repeatCount
-             + ",\"packet_gap_ms\":"             + rf_.packetGapMs
-             + ",\"time_enabled\":"              + (rf_.timeEnabled ? "true" : "false")
+    String j = String("{\"repeat_count\":")      + rf_.repeatCount()
+             + ",\"packet_gap_ms\":"             + rf_.packetGapMs()
+             + ",\"time_enabled\":"              + (rf_.timeEnabled() ? "true" : "false")
              + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeout() / 1000)
              + ",\"brightness\":"               + display_.wakeBrightness()
-             + ",\"hostname\":\""               + String(devSettings.hostname) + "\""
-             + ",\"wifi_ssid\":\""              + String(devSettings.wifiSsid) + "\""
+             + ",\"hostname\":\""               + String(store_.settings.hostname) + "\""
+             + ",\"wifi_ssid\":\""              + String(store_.settings.wifiSsid) + "\""
              + ",\"wifi_pass\":\"***\""
              + ",\"tz_offset_sec\":"             + store_.settings.tzOffsetSec
              + "}";
@@ -417,7 +417,7 @@ void WebAPI::handleSettingsDevPost_() {
         int t = doc["sleep_timeout_sec"].as<int>();
         if (t >= 5 && t <= 3600) {
             display_.setSleepTimeout((uint32_t)t * 1000);
-            devSettings.sleepTimeoutSec = (uint16_t)t;
+            store_.settings.sleepTimeoutSec = (uint16_t)t;
         }
     }
     if (!doc["brightness"].isNull()) {

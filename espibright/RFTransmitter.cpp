@@ -82,7 +82,7 @@ void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
 void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label) {
     clearBuf();
     addToBuf(p8, "CMD");
-    if (withTime && timeEnabled && getTime) {
+    if (withTime && timeEnabled_ && getTime) {
         uint8_t hh, mm, ss;
         getTime(hh, mm, ss);
         uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
