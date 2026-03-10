@@ -638,6 +638,13 @@ details[open] .chev{transform:rotate(180deg)}
           </div>
         </div>
         <div class="cfg-row">
+          <span class="cfg-lbl">Inter-packet gap</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" class="num" id="cfg-gap" min="0" max="1000" value="1" style="width:60px">
+            <span class="pct">ms between each packet in burst (0–1000)</span>
+          </div>
+        </div>
+        <div class="cfg-row">
           <span class="cfg-lbl">Send time packet after burst</span>
           <label class="sw"><input type="checkbox" id="cfg-time" checked><span class="sw-tr"></span></label>
         </div>
@@ -752,7 +759,7 @@ details[open] .chev{transform:rotate(180deg)}
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
         </tbody>
       </table>
@@ -1272,6 +1279,7 @@ async function cfgLoad() {
   try {
     const s = await api('/api/settings/device','GET');
     if (s.repeat_count != null)      document.getElementById('cfg-repeat').value  = s.repeat_count;
+    if (s.packet_gap_ms != null)     document.getElementById('cfg-gap').value      = s.packet_gap_ms;
     if (s.time_enabled != null)      document.getElementById('cfg-time').checked   = s.time_enabled;
     if (s.sleep_timeout_sec != null) document.getElementById('cfg-timeout').value  = s.sleep_timeout_sec;
     if (s.brightness != null) {
@@ -1296,6 +1304,7 @@ function cfgTogglePass() {
 async function cfgSave() {
   const body = {
     repeat_count:      parseInt(document.getElementById('cfg-repeat').value),
+    packet_gap_ms:     parseInt(document.getElementById('cfg-gap').value),
     time_enabled:      document.getElementById('cfg-time').checked,
     sleep_timeout_sec: parseInt(document.getElementById('cfg-timeout').value),
     brightness:        parseInt(document.getElementById('cfg-bright').value),
