@@ -288,7 +288,7 @@ void WebAPI::handleTimeSend_() {
 
 void WebAPI::handleTimeNtp_() {
     sendCors_();
-    bool ok = clock_.syncNtp(devSettings.tzOffsetSec);
+    bool ok = clock_.syncNtp(store_.settings.tzOffsetSec);
     if (ok) {
         String r = String("{\"ok\":true,\"hh\":") + clock_.hh
                  + ",\"mm\":" + clock_.mm
@@ -343,8 +343,8 @@ void WebAPI::handleTimeGlobal_() {
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
     rf_.timeEnabled = doc["enabled"] | rf_.timeEnabled;
-    devSettings.timeEnabled = rf_.timeEnabled;
-    store_.saveSettings(devSettings);
+    store_.settings.timeEnabled = rf_.timeEnabled;
+    store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
 
@@ -358,8 +358,8 @@ void WebAPI::handleRepeatSet_() {
         return;
     }
     rf_.repeatCount = n;
-    devSettings.repeatCount = n;
-    store_.saveSettings(devSettings);
+    store_.settings.repeatCount = n;
+    store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
 
@@ -374,8 +374,8 @@ void WebAPI::handlePacketGapSet_() {
         return;
     }
     rf_.packetGapMs = g;
-    devSettings.packetGapMs = g;
-    store_.saveSettings(devSettings);
+    store_.settings.packetGapMs = g;
+    store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
 
@@ -386,10 +386,10 @@ void WebAPI::handleSettingsDevGet_() {
              + ",\"time_enabled\":"              + (rf_.timeEnabled ? "true" : "false")
              + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeout() / 1000)
              + ",\"brightness\":"               + display_.wakeBrightness()
-             + ",\"hostname\":\""               + String(devSettings.hostname) + "\""
-             + ",\"wifi_ssid\":\""              + String(devSettings.wifiSsid) + "\""
+             + ",\"hostname\":\""               + String(store_.settings.hostname) + "\""
+             + ",\"wifi_ssid\":\""              + String(store_.settings.wifiSsid) + "\""
              + ",\"wifi_pass\":\"***\""
-             + ",\"tz_offset_sec\":"             + devSettings.tzOffsetSec
+             + ",\"tz_offset_sec\":"             + store_.settings.tzOffsetSec
              + "}";
     server_.send(200, "application/json", j);
 }
@@ -403,51 +403,51 @@ void WebAPI::handleSettingsDevPost_() {
 
     if (!doc["repeat_count"].isNull()) {
         int n = doc["repeat_count"].as<int>();
-        if (n >= 1 && n <= 20) { rf_.repeatCount = n; devSettings.repeatCount = n; }
+        if (n >= 1 && n <= 20) { rf_.repeatCount = n; store_.settings.repeatCount = n; }
     }
     if (!doc["packet_gap_ms"].isNull()) {
         int g = doc["packet_gap_ms"].as<int>();
-        if (g >= 0 && g <= 1000) { rf_.packetGapMs = g; devSettings.packetGapMs = g; }
+        if (g >= 0 && g <= 1000) { rf_.packetGapMs = g; store_.settings.packetGapMs = g; }
     }
     if (!doc["time_enabled"].isNull()) {
         rf_.timeEnabled = doc["time_enabled"].as<bool>();
-        devSettings.timeEnabled = rf_.timeEnabled;
+        store_.settings.timeEnabled = rf_.timeEnabled;
     }
     if (!doc["sleep_timeout_sec"].isNull()) {
         int t = doc["sleep_timeout_sec"].as<int>();
         if (t >= 5 && t <= 3600) {
             display_.setSleepTimeout((uint32_t)t * 1000);
-            devSettings.sleepTimeoutSec = (uint16_t)t;
+            store_.settings.sleepTimeoutSec = (uint16_t)t;
         }
     }
     if (!doc["brightness"].isNull()) {
         int b = doc["brightness"].as<int>();
         if (b >= 0 && b <= 255) {
             display_.setWakeBrightness((uint8_t)b);
-            devSettings.brightness = (uint8_t)b;
+            store_.settings.brightness = (uint8_t)b;
         }
     }
     if (!doc["hostname"].isNull()) {
         const char* h = doc["hostname"].as<const char*>();
-        strncpy(devSettings.hostname, h, sizeof(devSettings.hostname) - 1);
+        strncpy(store_.settings.hostname, h, sizeof(store_.settings.hostname) - 1);
         rebootRequired = true;
     }
     if (!doc["wifi_ssid"].isNull()) {
         const char* s = doc["wifi_ssid"].as<const char*>();
-        strncpy(devSettings.wifiSsid, s, sizeof(devSettings.wifiSsid) - 1);
+        strncpy(store_.settings.wifiSsid, s, sizeof(store_.settings.wifiSsid) - 1);
         rebootRequired = true;
     }
     if (!doc["wifi_pass"].isNull()) {
         const char* pw = doc["wifi_pass"].as<const char*>();
-        strncpy(devSettings.wifiPass, pw, sizeof(devSettings.wifiPass) - 1);
+        strncpy(store_.settings.wifiPass, pw, sizeof(store_.settings.wifiPass) - 1);
         rebootRequired = true;
     }
     if (!doc["tz_offset_sec"].isNull()) {
-        devSettings.tzOffsetSec = doc["tz_offset_sec"].as<int32_t>();
+        store_.settings.tzOffsetSec = doc["tz_offset_sec"].as<int32_t>();
         rebootRequired = true;
     }
 
-    store_.saveSettings(devSettings);
+    store_.saveSettings();
     String r = String("{\"ok\":true,\"reboot_required\":")
              + (rebootRequired ? "true" : "false") + "}";
     server_.send(200, "application/json", r);
