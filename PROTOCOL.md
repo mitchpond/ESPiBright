@@ -8,9 +8,10 @@ All findings confirmed across 5+ independent captures unless noted otherwise.
 ## Physical Layer
 
 - **Modulation:** OOK (On-Off Keying), 433 MHz
-- **Pulse width:** ~300 µs (1-bit), ~150 µs (0-bit)
-- **Burst:** each packet transmitted ×3 in rapid succession
-- **Channel commands** also append ×3 time (HMS) packets when the global time flag is enabled
+- **Observed timing (RTL-SDR captures):** ~300 µs (1-bit), ~150 µs (0-bit)
+- **RMT implementation timing:** pulse=508µs, short_gap=508µs, long_gap=1008µs, reset_gap=6000µs
+- **Burst:** each packet transmitted ×`TX_REPEAT` (default 5) in rapid succession
+- **Channel commands** also append time (HMS) packets when the global time flag is enabled
 
 ---
 
@@ -130,10 +131,13 @@ The schedule is sent as a fixed sequence of 7 types, repeated **×3**, with no
 time packet appended. Sending schedule does **not** implicitly sync the clock —
 use a separate time send.
 
-**Confirmed sequence (×3):**
+**Implementation sequence (×repeatCount):**
 ```
-03 → 04 → 05 → 07 → 08 → 09 → 02
+02 → 03 → 04 → 05 → 07 → 08 → 09
 ```
+
+**Note on ordering:** Early RTL-SDR captures suggested TYPE 02 came last (03→04→05→07→08→09→02).
+The implementation sends it first. Both orderings have been used; the device appears to accept either.
 
 To disable a slot, set HH = MM = `0x00`.
 
@@ -213,14 +217,11 @@ B6 = 0x00
 
 ### TYPE 02 — Blue OFF (schedule)
 
-Blue channel turn-off event. Always last in the schedule sequence.
+Blue channel turn-off event. Sent first in the current implementation.
 
 ```
 B3=HH, B4=MM, B5=0x00, B6=0x00
 ```
-
-**Note:** TYPE `0x02` appearing last despite having the lowest number is
-confirmed across 5+ captures. The ordering `03→04→05→07→08→09→02` is fixed.
 
 ---
 
@@ -228,7 +229,7 @@ confirmed across 5+ captures. The ordering `03→04→05→07→08→09→02` is
 
 | Type | Channel | Action          | B3   | B5              | Position |
 |------|---------|-----------------|------|-----------------|----------|
-| 02   | Blue    | OFF             | HH   | `0x00`          | 7 (last) |
+| 02   | Blue    | OFF             | HH   | `0x00`          | 1 (first)|
 | 03   | White   | OFF             | HH   | `0x00`          | 1        |
 | 04   | White   | ON              | HH   | `0x00`          | 2        |
 | 05   | Blue    | ON              | HH   | `0x00`          | 3        |
@@ -284,11 +285,7 @@ it is exclusively the Blue OFF schedule slot.
    Values `0x02`, `0x04`, `0x08` are inferred from app UI one-hot layout;
    direct packet captures with each speed selected would fully confirm.
 
-2. **TYPE 02 sequence position.**
-   Blue OFF (TYPE `0x02`) appears last despite lowest type number.
-   Whether this ordering matters to the device is unknown.
-
-3. **Independent slot behaviour.**
+2. **Independent slot behaviour.**
    Whether a schedule can omit TYPE 08 or 09 (e.g. RGB always on, no OFF
    slot) without causing device issues is untested.
 
