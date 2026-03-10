@@ -30,7 +30,7 @@ void ScheduleState::send() {
     // Type 07: always LIVE state — NOT the frozen slot state
     {
         uint8_t liveState = ch_.rgbStateByte();
-        uint8_t p7[7] = {0xD0, 0x23, liveState, 0x00, 0x00, 0x00, 0x07};
+        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, liveState, 0x00, 0x00, 0x00, 0x07};
         rf_.buildPacket(p7, pkts[4]);
     }
 

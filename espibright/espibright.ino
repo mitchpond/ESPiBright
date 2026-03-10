@@ -43,9 +43,9 @@ void setup() {
     DevSettings& s = web.devSettings;
 
     // Apply display settings before splash
-    display.sleepTimeoutMs = (uint32_t)s.sleepTimeoutSec * 1000;
-    display.wakebrightness = s.brightness;
-    display.wifiSsid       = s.wifiSsid;
+    display.setSleepTimeout((uint32_t)s.sleepTimeoutSec * 1000);
+    display.setWakeBrightness(s.brightness);
+    display.wifiSsid = s.wifiSsid;
 
     display.begin();
     display.drawBootSplash();
@@ -63,6 +63,11 @@ void setup() {
 
     // Wire TX flash callback: every transmission lights the header dot
     rf.onTransmit = [](){ display.flashTx(); display.markDirty(); };
+
+    // Wire time provider so every +TIME tail uses the live clock, not a stale cache
+    rf.getTime = [](uint8_t& h, uint8_t& m, uint8_t& s){
+        h = clock_.hh; m = clock_.mm; s = clock_.ss;
+    };
 
     // Connect WiFi using persisted credentials
     WiFi.setHostname(s.hostname);

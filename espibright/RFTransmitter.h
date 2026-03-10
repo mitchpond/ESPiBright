@@ -22,7 +22,13 @@
 
 class RFTransmitter {
 public:
-    std::function<void()> onTransmit;   // optional callback fired after every flush
+    /// Fired after every flush() — use to trigger UI updates, etc.
+    std::function<void()> onTransmit;
+
+    /// Provide current HH:MM:SS for the +TIME tail appended to channel commands.
+    /// If unset, the +TIME tail is suppressed even when timeEnabled is true.
+    /// Wire this in setup() to always send fresh time with every channel command.
+    std::function<void(uint8_t& hh, uint8_t& mm, uint8_t& ss)> getTime;
 
     explicit RFTransmitter(TxLog& log) : log_(log) {}
 
@@ -72,7 +78,6 @@ private:
     rmt_channel_handle_t chan_    = nullptr;
     rmt_encoder_handle_t encoder_ = nullptr;
     uint8_t              crcTable_[256];
-    uint8_t              pktTimeHms_[8];
 
     BufPkt  buf_[BUF_CAP];
     int     bufN_  = 0;
@@ -80,4 +85,8 @@ private:
     int     tailN_ = 0;
 
     void recordTx_(const uint8_t* p8, const char* label);
+
+    // Shared packet-copy logic for addToBuf / addToTail
+    static void appendPkt_(BufPkt* buf, int& n, int cap,
+                           const uint8_t* p8, const char* note);
 };

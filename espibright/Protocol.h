@@ -37,6 +37,10 @@ namespace Protocol {
     }
 
     // Compute CRC-8 over a 7-byte payload using a precomputed table.
+    // The final `table[crc ^ 0x00]` applies one extra CRC step on the
+    // accumulated result (equivalent to processing an implicit zero byte).
+    // This is required by the OptiBright protocol — confirmed against hardware.
+    // Do not simplify to just `return crc`.
     inline uint8_t checksum(const uint8_t* table, const uint8_t* p7) {
         uint8_t crc = 0;
         for (int i = 0; i < 7; i++) crc = table[crc ^ p7[i]];

@@ -50,13 +50,13 @@ const char* Display::speedLabel(uint8_t cyc) {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 void Display::setWakeBrightness(uint8_t b) {
-    wakebrightness = b;
+    wakeBrightness_ = b;
     pendingBrightness_ = true;
 }
 
 void Display::begin() {
     D.setRotation(3);
-    D.setBrightness(wakebrightness);
+    D.setBrightness(wakeBrightness_);
     D.setFont(&fonts::Font0);
     dirty_ = true;
     lastActivityMs_ = millis();  // don't count boot time against sleep timeout
@@ -104,7 +104,7 @@ void Display::drawConnecting() {
 void Display::wake_() {
     sleeping_ = false;
     lastActivityMs_ = millis();
-    D.setBrightness(wakebrightness);
+    D.setBrightness(wakeBrightness_);
     dirty_ = true;
 }
 
@@ -113,7 +113,7 @@ void Display::update() {
 
     if (pendingBrightness_) {
         pendingBrightness_ = false;
-        D.setBrightness(sleeping_ ? 0 : wakebrightness);
+        D.setBrightness(sleeping_ ? 0 : wakeBrightness_);
     }
 
     // Touch wake / activity
@@ -123,7 +123,7 @@ void Display::update() {
     }
 
     // Sleep timeout
-    if (!sleeping_ && now - lastActivityMs_ > sleepTimeoutMs) {
+    if (!sleeping_ && now - lastActivityMs_ > sleepTimeoutMs_) {
         sleeping_ = true;
         D.setBrightness(0);
         return;
@@ -179,6 +179,7 @@ void Display::handleButtons_() {
     // BtnB = side button       → cycle pages
     // BtnC = not usable
     if (M5.BtnA.wasClicked()) {
+        lastActivityMs_ = millis();  // any button press counts as user activity
         switch (page_) {
             case PAGE_LIVE:     ch_.send();           dirty_ = true; break;
             case PAGE_SCHEDULE: sched_.send();        dirty_ = true; break;
@@ -190,6 +191,7 @@ void Display::handleButtons_() {
         if (page_ == PAGE_SYSTEM) ESP.restart();
     }
     if (M5.BtnB.wasClicked()) {
+        lastActivityMs_ = millis();  // page navigation counts as user activity
         page_ = (UIPage)((page_ + 1) % PAGE_COUNT);
         dirty_ = true;
     }

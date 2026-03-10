@@ -20,12 +20,12 @@ void TxLog::addPkt(const uint8_t* p8, const char* note) {
 
 void TxLog::commit() {
     writeIdx_ = (writeIdx_ + 1) % LOG_ENTRIES;
-    count++;
+    count_++;
     cur_ = nullptr;
 }
 
 const LogEntry* TxLog::slotAt(int offset) const {
-    int total = min(count, LOG_ENTRIES);
+    int total = min(count_, LOG_ENTRIES);
     if (offset < 0 || offset >= total) return nullptr;
     int slot = ((writeIdx_ - 1 - offset) + LOG_ENTRIES * 2) % LOG_ENTRIES;
     return &entries_[slot];

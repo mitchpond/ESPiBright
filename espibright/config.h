@@ -20,7 +20,7 @@
 
 // ── Display ───────────────────────────────────────────────────────────────────
 #define SLEEP_TIMEOUT_MS  (3 * 60 * 1000)  // blank screen after 3 min idle
-#define SLEEP_BRIGHTNESS  180               // wake brightness (name is a misnomer; this is NOT sleep brightness)
+#define WAKE_BRIGHTNESS   180               // display brightness when awake (0–255)
 // Target hardware: Arduino Nesso N1 (ESP32-C6, 1.14" TFT, IMU, LiPo)
 // Landscape (rotation 3, normal): 240w × 135h
 // Portrait  (rotation 2, tilted): 135w × 240h

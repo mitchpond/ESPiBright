@@ -24,10 +24,6 @@ public:
     String ipAddress = "---";
     String wifiSsid  = WIFI_SSID;
 
-    // Runtime-settable (applied from DevSettings before begin())
-    uint32_t sleepTimeoutMs = SLEEP_TIMEOUT_MS;
-    uint8_t  wakebrightness = SLEEP_BRIGHTNESS;
-
     Display(ChannelState& ch, ScheduleState& sched,
             ClockState& clock, RFTransmitter& rf)
         : ch_(ch), sched_(sched), clock_(clock), rf_(rf) {}
@@ -40,13 +36,24 @@ public:
 
     void markDirty() { dirty_ = true; }
     void flashTx()   { txLit_ = true; txUntil_ = millis() + 280; }
-    void setWakeBrightness(uint8_t b);
+
+    // Brightness applied when the display is awake (0–255).
+    // Setting this after begin() defers the hardware write to the next update() call.
+    void    setWakeBrightness(uint8_t b);
+    uint8_t wakeBrightness() const { return wakeBrightness_; }
+
+    // How long (ms) of inactivity before the screen blanks.
+    void     setSleepTimeout(uint32_t ms) { sleepTimeoutMs_ = ms; }
+    uint32_t sleepTimeout()         const { return sleepTimeoutMs_; }
 
 private:
     ChannelState&  ch_;
     ScheduleState& sched_;
     ClockState&    clock_;
     RFTransmitter& rf_;
+
+    uint32_t sleepTimeoutMs_ = SLEEP_TIMEOUT_MS;
+    uint8_t  wakeBrightness_ = WAKE_BRIGHTNESS;
 
     UIPage   page_             = PAGE_LIVE;
     bool     dirty_            = true;
