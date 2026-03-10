@@ -37,20 +37,21 @@ void RFTransmitter::clearBuf() {
     tailN_ = 0;
 }
 
-void RFTransmitter::addToBuf(const uint8_t* p8, const char* note) {
-    if (bufN_ >= BUF_CAP) return;
-    BufPkt& bp = buf_[bufN_++];
+void RFTransmitter::appendPkt_(BufPkt* buf, int& n, int cap,
+                                const uint8_t* p8, const char* note) {
+    if (n >= cap) return;
+    BufPkt& bp = buf[n++];
     memcpy(bp.pkt, p8, 8);
     strncpy(bp.note, note, sizeof(bp.note) - 1);
     bp.note[sizeof(bp.note) - 1] = '\0';
 }
 
+void RFTransmitter::addToBuf (const uint8_t* p8, const char* note) {
+    appendPkt_(buf_,  bufN_,  BUF_CAP, p8, note);
+}
+
 void RFTransmitter::addToTail(const uint8_t* p8, const char* note) {
-    if (tailN_ >= BUF_CAP) return;
-    BufPkt& bp = tail_[tailN_++];
-    memcpy(bp.pkt, p8, 8);
-    strncpy(bp.note, note, sizeof(bp.note) - 1);
-    bp.note[sizeof(bp.note) - 1] = '\0';
+    appendPkt_(tail_, tailN_, BUF_CAP, p8, note);
 }
 
 void RFTransmitter::flush(const char* label) {
@@ -81,15 +82,23 @@ void RFTransmitter::buildPacket(const uint8_t* p7, uint8_t* out8) const {
 void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label) {
     clearBuf();
     addToBuf(p8, "CMD");
-    if (withTime && timeEnabled) addToTail(pktTimeHms_, "HMS");
+    if (withTime && timeEnabled && getTime) {
+        uint8_t hh, mm, ss;
+        getTime(hh, mm, ss);
+        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
+        uint8_t tail[8];
+        buildPacket(p7, tail);
+        addToTail(tail, "HMS");
+    }
     flush(label);
 }
 
 void RFTransmitter::sendTimePackets(uint8_t hh, uint8_t mm, uint8_t ss, const char* label) {
-    uint8_t p7[7] = {0xD0, 0x23, hh, mm, ss, 0x00, 0x01};
-    buildPacket(p7, pktTimeHms_);
+    uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
+    uint8_t pkt[8];
+    buildPacket(p7, pkt);
     clearBuf();
-    addToBuf(pktTimeHms_, "HMS");
+    addToBuf(pkt, "HMS");
     flush(label);
 }
 

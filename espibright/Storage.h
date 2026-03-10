@@ -17,7 +17,7 @@ struct DevSettings {
     int     packetGapMs       = TX_PACKET_GAP_MS;
     bool    timeEnabled       = true;
     uint16_t sleepTimeoutSec  = SLEEP_TIMEOUT_MS / 1000;
-    uint8_t brightness        = SLEEP_BRIGHTNESS;
+    uint8_t brightness        = WAKE_BRIGHTNESS;
     int32_t tzOffsetSec       = TZ_OFFSET_SEC;
 };
 

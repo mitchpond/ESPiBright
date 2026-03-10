@@ -23,23 +23,21 @@ struct LogEntry {
 
 class TxLog {
 public:
-    int   count     = 0;
-
     void begin(const char* label);
     void addPkt(const uint8_t* p8, const char* note);
     void commit();
 
-    // Iterate entries newer than global index `since`, newest-first
-    // Returns number of entries written to `out` (up to `maxOut`)
-    int  getEntriesSince(int since, LogEntry* out, int maxOut) const;
-    int  totalCount() const { return count; }
+    // Total transmissions ever logged (monotonically increasing, used as sequence number)
+    int  totalCount() const { return count_; }
 
-    // Direct slot access for JSON serialisation (used by WebAPI)
-    const LogEntry* slotAt(int offset) const;   // offset from most recent (0=newest)
-    int  available() const { return min(count, LOG_ENTRIES); }
+    // Direct slot access for JSON serialisation (used by WebAPI).
+    // offset=0 is the most recent entry, offset=1 the one before, etc.
+    const LogEntry* slotAt(int offset) const;
+    int  available() const { return min(count_, LOG_ENTRIES); }
 
 private:
     LogEntry entries_[LOG_ENTRIES];
     int      writeIdx_ = 0;
+    int      count_    = 0;
     LogEntry* cur_     = nullptr;
 };

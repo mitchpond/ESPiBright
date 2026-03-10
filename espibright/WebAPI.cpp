@@ -183,11 +183,12 @@ void WebAPI::handleApiLog_() {
     int since = server_.hasArg("since") ? server_.arg("since").toInt() : 0;
     int total = log_.available();
 
-    String j = "{\"count\":" + String(log_.count) + ",\"entries\":[";
+    int logTotal = log_.totalCount();
+    String j = "{\"count\":" + String(logTotal) + ",\"entries\":[";
     bool first = true;
 
     for (int offset = 0; offset < total; offset++) {
-        int globalIdx = log_.count - 1 - offset;
+        int globalIdx = logTotal - 1 - offset;
         if (globalIdx <= since) break;
         const LogEntry* e = log_.slotAt(offset);
         if (!e) continue;
@@ -383,8 +384,8 @@ void WebAPI::handleSettingsDevGet_() {
     String j = String("{\"repeat_count\":")      + rf_.repeatCount
              + ",\"packet_gap_ms\":"             + rf_.packetGapMs
              + ",\"time_enabled\":"              + (rf_.timeEnabled ? "true" : "false")
-             + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeoutMs / 1000)
-             + ",\"brightness\":"               + display_.wakebrightness
+             + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeout() / 1000)
+             + ",\"brightness\":"               + display_.wakeBrightness()
              + ",\"hostname\":\""               + String(devSettings.hostname) + "\""
              + ",\"wifi_ssid\":\""              + String(devSettings.wifiSsid) + "\""
              + ",\"wifi_pass\":\"***\""
@@ -415,7 +416,7 @@ void WebAPI::handleSettingsDevPost_() {
     if (!doc["sleep_timeout_sec"].isNull()) {
         int t = doc["sleep_timeout_sec"].as<int>();
         if (t >= 5 && t <= 3600) {
-            display_.sleepTimeoutMs = (uint32_t)t * 1000;
+            display_.setSleepTimeout((uint32_t)t * 1000);
             devSettings.sleepTimeoutSec = (uint16_t)t;
         }
     }
