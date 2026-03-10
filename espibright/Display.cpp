@@ -157,16 +157,15 @@ void Display::update() {
 }
 
 // ── Orientation ───────────────────────────────────────────────────────────────
+// Portrait is not supported — the 1.14" screen is too narrow to render a
+// usable UI vertically. Only landscape rotations (1 and 3) are used.
 
 void Display::checkOrientation_() {
     float ax, ay, az;
     if (!M5.Imu.getAccel(&ax, &ay, &az)) return;
-    bool wantLandscape = fabsf(ay) > fabsf(ax);
-    // Rotation: landscape ay>0→3, ay<0→1; portrait ax>0→2, ax<0→0
-    uint8_t wantRotation = wantLandscape ? (ay > 0 ? 3 : 1) : (ax > 0 ? 2 : 0);
+    uint8_t wantRotation = (ay > 0) ? 3 : 1;
     if (wantRotation != rotation_) {
-        rotation_  = wantRotation;
-        landscape_ = wantLandscape;
+        rotation_ = wantRotation;
         D.setRotation(wantRotation);
         dirty_ = true;
     }

@@ -58,8 +58,7 @@ private:
     UIPage   page_             = PAGE_LIVE;
     bool     dirty_            = true;
     bool     pendingBrightness_ = false;
-    bool     landscape_     = true;
-    uint8_t  rotation_      = 3;
+    uint8_t  rotation_      = 3;   // current landscape rotation (1 or 3); tracks last setRotation call
     uint32_t tickMs_        = 0;
     uint32_t imuMs_         = 0;
     bool     txLit_         = false;

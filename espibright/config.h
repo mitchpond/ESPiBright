@@ -22,14 +22,11 @@
 #define SLEEP_TIMEOUT_MS  (3 * 60 * 1000)  // blank screen after 3 min idle
 #define WAKE_BRIGHTNESS   180               // display brightness when awake (0–255)
 // Target hardware: Arduino Nesso N1 (ESP32-C6, 1.14" TFT, IMU, LiPo)
-// Landscape (rotation 3, normal): 240w × 135h
-// Portrait  (rotation 2, tilted): 135w × 240h
-// Drawing code uses D.width()/D.height() at runtime, not these constants.
-// These are only kept as reference / for anything that must be compile-time.
+// Only landscape orientation is supported (rotation 1 or 3): 240w × 135h.
+// Portrait is not used — the screen is too narrow for a workable UI.
+// Drawing code uses D.width()/D.height() at runtime; SCR_W/H are reference only.
 #define SCR_W_LS     240   // landscape width
 #define SCR_H_LS     135   // landscape height
-#define SCR_W_PT     135   // portrait width
-#define SCR_H_PT     240   // portrait height
 #define HDR_H         15
 #define FTR_H         14
 // COL_W is computed at runtime as D.width()/3
