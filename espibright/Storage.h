@@ -27,20 +27,24 @@ struct DevSettings {
 //
 // Usage:
 //   Storage store;
-//   store.loadSettings(settings);        // call first in setup()
-//   store.loadAll(channels, schedule);   // call before begin()
-//   store.saveChannels(channels);        // call after any channel change
-//   store.saveSchedule(schedule);        // call after any schedule change
-//   store.saveSettings(settings);        // call after any settings change
+//   store.loadSettings();            // call first in setup(); populates store.settings
+//   store.loadAll(channels, sched);  // restore channel/schedule state
+//   store.saveChannels(channels);    // call after any channel change
+//   store.saveSchedule(sched);       // call after any schedule change
+//   store.saveSettings();            // call after any settings change
 
 class Storage {
 public:
+    /// Live device settings. Populated by loadSettings(); mutated by WebAPI handlers.
+    DevSettings settings;
+
     void loadAll(ChannelState& ch, ScheduleState& sched) {
         loadChannels(ch);
         loadSchedule(sched);
     }
 
-    void loadSettings(DevSettings& s) {
+    void loadSettings() {
+        DevSettings& s = settings;
         Preferences p;
         if (!p.begin("dev", true)) return;
         auto str = [&](const char* k, char* dst, size_t n) {
@@ -59,7 +63,8 @@ public:
         p.end();
     }
 
-    void saveSettings(const DevSettings& s) {
+    void saveSettings() {
+        const DevSettings& s = settings;
         Preferences p;
         p.begin("dev", false);
         p.putString("host",  s.hostname);

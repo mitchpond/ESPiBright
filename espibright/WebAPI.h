@@ -35,9 +35,6 @@ public:
     void begin();
     void handle() { server_.handleClient(); }
 
-    // Kept in sync with NVS; set from espibright.ino before begin()
-    DevSettings devSettings;
-
 private:
     RFTransmitter& rf_;
     ChannelState&  ch_;

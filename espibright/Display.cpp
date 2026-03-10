@@ -494,9 +494,9 @@ void Display::drawPageSystem_() {
     y += LH;
     D.setTextColor(UI_DIM, UI_BG); D.drawString("TX", 4, y);
     char txbuf[32];
-    if (rf_.lastMs > 0) {
-        uint32_t ago = (millis() - rf_.lastMs) / 1000;
-        snprintf(txbuf, sizeof(txbuf), "%-12s %ds ago", rf_.lastLabel, ago);
+    if (rf_.lastMs() > 0) {
+        uint32_t ago = (millis() - rf_.lastMs()) / 1000;
+        snprintf(txbuf, sizeof(txbuf), "%-12s %ds ago", rf_.lastLabel(), ago);
     } else {
         snprintf(txbuf, sizeof(txbuf), "none");
     }

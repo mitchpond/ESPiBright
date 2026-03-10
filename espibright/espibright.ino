@@ -39,8 +39,8 @@ void setup() {
     M5.begin(cfg);
 
     // Load device settings first — they affect everything below
-    store.loadSettings(web.devSettings);
-    DevSettings& s = web.devSettings;
+    store.loadSettings();
+    DevSettings& s = store.settings;
 
     // Apply display settings before splash
     display.setSleepTimeout((uint32_t)s.sleepTimeoutSec * 1000);
@@ -52,9 +52,9 @@ void setup() {
     display.drawConnecting();
 
     // Apply TX settings
-    rf.repeatCount = s.repeatCount;
-    rf.packetGapMs = s.packetGapMs;
-    rf.timeEnabled = s.timeEnabled;
+    rf.setRepeatCount(s.repeatCount);
+    rf.setPacketGapMs(s.packetGapMs);
+    rf.setTimeEnabled(s.timeEnabled);
 
     // Restore persisted channel/schedule state before anything transmits
     store.loadAll(channels, schedule);
