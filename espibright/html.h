@@ -646,7 +646,7 @@ details[open] .chev{transform:rotate(180deg)}
         <div class="cfg-row">
           <span class="cfg-lbl">Screen timeout</span>
           <div style="display:flex;align-items:center;gap:8px">
-            <input type="number" class="num" id="cfg-timeout" min="10" max="3600" value="180" style="width:68px">
+            <input type="number" class="num" id="cfg-timeout" min="5" max="3600" value="180" style="width:68px">
             <span class="pct">sec</span>
           </div>
         </div>

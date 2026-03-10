@@ -414,7 +414,7 @@ void WebAPI::handleSettingsDevPost_() {
     }
     if (!doc["sleep_timeout_sec"].isNull()) {
         int t = doc["sleep_timeout_sec"].as<int>();
-        if (t >= 10 && t <= 3600) {
+        if (t >= 5 && t <= 3600) {
             display_.sleepTimeoutMs = (uint32_t)t * 1000;
             devSettings.sleepTimeoutSec = (uint16_t)t;
         }
