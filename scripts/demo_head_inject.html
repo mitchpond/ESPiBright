@@ -1,0 +1,67 @@
+
+<script>
+const _DEMO_FIXTURES=[
+  {index:0,name:'Freshwater',addr:0xD0},
+  {index:1,name:'Reef Tank',addr:0xA3}
+];
+const _DEMO_DEV={repeat_count:5,packet_gap_us:0,burst_gap_ms:1,time_enabled:true,sleep_timeout_sec:180,brightness:180,hostname:'ESPiBright',wifi_ssid:'your-ssid',wifi_pass:'***',tz_offset_sec:-18000};
+const _DEMO_FX=[
+  {channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:8,rgb_cycle:1,rgb_level:10},
+   schedule:{white_on:{active:true,hh:11,mm:0},white_off:{active:true,hh:23,mm:0},blue_on:{active:true,hh:11,mm:0},blue_off:{active:true,hh:23,mm:30},rgb_on:{active:true,hh:11,mm:0,state:0x88},rgb_off:{active:true,hh:23,mm:0,state:0x08}}},
+  {channels:{white_on:false,white_level:6,blue_on:true,blue_level:8,rgb_on:true,rgb_color:1,rgb_cycle:2,rgb_level:7},
+   schedule:{white_on:{active:false,hh:10,mm:0},white_off:{active:false,hh:22,mm:0},blue_on:{active:true,hh:10,mm:0},blue_off:{active:true,hh:22,mm:0},rgb_on:{active:true,hh:10,mm:0,state:0x81},rgb_off:{active:true,hh:22,mm:0,state:0x01}}}
+];
+const _DEMO={label:'CHANNEL CMD',hex:'d0238a8a8601a6e4',ms_ago:4200,send_time_global:true,repeat_count:5,packet_gap_us:0,burst_gap_ms:1,battery_pct:78,build:'26.3.2000',
+  time:{hh:19,mm:20,ss:29},logSeq:4,log:[
+    {seq:4,ms:142000,label:'CHANNEL CMD',pkts:[{hex:'d0238a8a8601a6e4',note:'CMD'},{hex:'d023131414001d00',note:'HMS'}]},
+    {seq:3,ms:98000,label:'TIME SEND',pkts:[{hex:'d023131414001d00',note:'HMS'}]},
+    {seq:2,ms:97000,label:'SCHEDULE',pkts:[
+      {hex:'d023170000000374',note:'WhOFF(03)'},{hex:'d0230b0000000497',note:'WhON(04)'},
+      {hex:'d0230b0000000598',note:'BlON(05)'},{hex:'d023880000000761',note:'STATE(07)'},
+      {hex:'d0230b0088000842',note:'RGBON(08)'},{hex:'d0230b0008000952',note:'RGBOFF(09)'},
+      {hex:'d023170000000212',note:'BlOFF(02)'}]},
+    {seq:1,ms:34000,label:'TIME SEND',pkts:[{hex:'d023131414001d00',note:'HMS'}]}]};
+function _fakeHex(){return 'd023'+Array.from({length:6},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('');}
+function _timeHex(t){const h=(v)=>v.toString(16).padStart(2,'0');return 'd023'+h(t.hh)+h(t.mm)+h(t.ss)+'000100';}
+window.fetch=function(url,opts){
+  const path=url.split('?')[0];const qs=url.includes('?')?url.split('?')[1]:'';
+  const qp={};qs.split('&').forEach(p=>{const[k,v]=p.split('=');if(k)qp[k]=v;});
+  let body={};try{body=JSON.parse(opts&&opts.body||'{}');}catch(_){}
+  const fix=parseInt(qp.fixture??body.fixture??0)||0;
+  const fxd=()=>_DEMO_FX[fix]||_DEMO_FX[0];
+  return new Promise(resolve=>{setTimeout(()=>{let data;
+    if(path==='/api/status'){_DEMO.ms_ago+=2000;data={label:_DEMO.label,hex:_DEMO.hex,ms_ago:_DEMO.ms_ago,send_time_global:_DEMO.send_time_global,repeat_count:_DEMO.repeat_count,packet_gap_us:_DEMO.packet_gap_us,burst_gap_ms:_DEMO.burst_gap_ms,battery_pct:_DEMO.battery_pct,build:_DEMO.build,time:_DEMO.time};}
+    else if(path==='/api/fixtures'){data=_DEMO_FIXTURES.map(f=>({...f}));}
+    else if(path==='/api/channels'){data={...fxd().channels};}
+    else if(path==='/api/schedule'){data={...fxd().schedule};}
+    else if(path==='/api/log'){const since=parseInt(qp.since||'0')||0;data={count:_DEMO.logSeq,entries:_DEMO.log.filter(e=>e.seq>since)};}
+    else if(path==='/api/send/channels'){Object.assign(fxd().channels,body);const h=_fakeHex();_DEMO.label='CHANNEL CMD';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'CHANNEL CMD',pkts:[{hex:h,note:'CMD'},{hex:_timeHex(_DEMO.time),note:'HMS'}]});data={ok:true,label:'CHANNEL CMD',hex:h};}
+    else if(path==='/api/send/raw'){const h=(body.payload||'d023000000000000').replace(/\s/g,'').substring(0,14).padEnd(14,'0')+'00';_DEMO.label='RAW';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'RAW',pkts:[{hex:h,note:'CMD'}]});data={ok:true,hex:h};}
+    else if(path==='/api/time/set'){Object.assign(_DEMO.time,body);data={ok:true};}
+    else if(path==='/api/time/ntp'){const n=new Date();Object.assign(_DEMO.time,{hh:n.getHours(),mm:n.getMinutes(),ss:n.getSeconds()});data={ok:true,hh:_DEMO.time.hh,mm:_DEMO.time.mm,ss:_DEMO.time.ss};}
+    else if(path==='/api/time/send'){const h=_timeHex(_DEMO.time);_DEMO.label='TIME SEND';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'TIME SEND',pkts:[{hex:h,note:'HMS'}]});data={ok:true};}
+    else if(path==='/api/schedule/set'){Object.assign(fxd().schedule,body);data={ok:true};}
+    else if(path==='/api/schedule/send'){
+      const th=_timeHex(_DEMO.time);
+      _DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'TIME SEND',pkts:[{hex:th,note:'HMS'}]});
+      const h=_fakeHex();_DEMO.label='SCHEDULE';_DEMO.hex=h;_DEMO.ms_ago=0;
+      _DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'SCHEDULE',pkts:[
+        {hex:_fakeHex(),note:'WhOFF(03)'},{hex:_fakeHex(),note:'WhON(04)'},
+        {hex:_fakeHex(),note:'BlON(05)'},{hex:_fakeHex(),note:'STATE(07)'},
+        {hex:_fakeHex(),note:'RGBON(08)'},{hex:_fakeHex(),note:'RGBOFF(09)'},
+        {hex:_fakeHex(),note:'BlOFF(02)'}
+      ]});data={ok:true};}
+    else if(path==='/api/fixtures/add'){if(_DEMO_FIXTURES.length<4){const idx=_DEMO_FIXTURES.length;_DEMO_FIXTURES.push({index:idx,name:'Fixture '+(idx+1),addr:Math.floor(Math.random()*255)+1});_DEMO_FX.push({channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:1,rgb_cycle:1,rgb_level:10},schedule:{white_on:{active:false,hh:11,mm:0},white_off:{active:false,hh:23,mm:0},blue_on:{active:false,hh:11,mm:0},blue_off:{active:false,hh:23,mm:0},rgb_on:{active:false,hh:11,mm:0,state:0x81},rgb_off:{active:false,hh:22,mm:0,state:0x01}}});data={ok:true};}else{data={ok:false,error:'max fixtures reached'};}}
+    else if(path==='/api/fixtures/remove'){const i=body.index||0;if(_DEMO_FIXTURES.length>1){_DEMO_FIXTURES.splice(i,1);_DEMO_FX.splice(i,1);_DEMO_FIXTURES.forEach((f,j)=>f.index=j);data={ok:true};}else{data={ok:false,error:'cannot remove last fixture'};}}
+    else if(path==='/api/fixtures/update'){const f=_DEMO_FIXTURES.find(f=>f.index===body.index);if(f){if(body.name!=null)f.name=body.name;if(body.addr!=null)f.addr=body.addr;data={ok:true};}else{data={ok:false,error:'not found'};}}
+    else if(path==='/api/settings/time_global'){_DEMO.send_time_global=body.enabled;data={ok:true};}
+    else if(path==='/api/settings/device'&&opts&&opts.method==='POST'){Object.assign(_DEMO_DEV,body);if(body.wifi_pass)_DEMO_DEV.wifi_pass='***';_DEMO.repeat_count=_DEMO_DEV.repeat_count||_DEMO.repeat_count;if(body.packet_gap_us!=null)_DEMO.packet_gap_us=body.packet_gap_us;if(body.burst_gap_ms!=null)_DEMO.burst_gap_ms=body.burst_gap_ms;data={ok:true,reboot_required:!!(body.hostname||body.wifi_ssid||body.wifi_pass||body.tz_offset_sec!=null)};}
+    else if(path==='/api/settings/device'){data={..._DEMO_DEV};}
+    else if(path==='/api/settings/repeat'){_DEMO.repeat_count=body.count;_DEMO_DEV.repeat_count=body.count;data={ok:true};}
+    else if(path==='/api/settings/packet_gap'){_DEMO.packet_gap_us=body.gap_us;_DEMO_DEV.packet_gap_us=body.gap_us;data={ok:true};}
+    else if(path==='/api/settings/burst_gap'){_DEMO.burst_gap_ms=body.gap_ms;_DEMO_DEV.burst_gap_ms=body.gap_ms;data={ok:true};}
+    else if(path==='/api/reboot'){data={ok:true};}
+    else{data={ok:false,error:'demo: unknown endpoint '+path};}
+    resolve({ok:true,json:()=>Promise.resolve(data)});},40+Math.random()*60);});};
+</script>
+<style>.demo-banner{background:linear-gradient(90deg,#b060ff22,#00d4ff22);border-bottom:1px solid #b060ff44;color:#b060ff;font-size:.75rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:.04em}[data-theme="light"] .demo-banner{background:linear-gradient(90deg,#6e38c822,#0094b822);border-bottom:1px solid #6e38c844;color:#6e38c8}</style>
