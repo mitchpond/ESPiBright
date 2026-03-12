@@ -72,6 +72,7 @@ private:
     void handleTimeGlobal_();
     void handleRepeatSet_();
     void handlePacketGapSet_();
+    void handleBurstGapSet_();
     void handleSettingsDevGet_();
     void handleSettingsDevPost_();
     void handleReboot_();

@@ -15,7 +15,8 @@ struct DevSettings {
     char    wifiSsid[65]      = WIFI_SSID;
     char    wifiPass[65]      = WIFI_PASS;
     int     repeatCount       = TX_REPEAT;
-    int     packetGapMs       = TX_PACKET_GAP_MS;
+    int     packetGapUs       = TX_PACKET_GAP_US;
+    int     burstGapMs        = TX_BURST_GAP_MS;
     bool    timeEnabled       = true;
     uint16_t sleepTimeoutSec  = SLEEP_TIMEOUT_MS / 1000;
     uint8_t brightness        = WAKE_BRIGHTNESS;
@@ -61,7 +62,8 @@ public:
         str("ssid",  s.wifiSsid, sizeof(s.wifiSsid));
         str("pass",  s.wifiPass, sizeof(s.wifiPass));
         s.repeatCount    = p.getInt   ("rpt",   s.repeatCount);
-        s.packetGapMs    = p.getInt   ("pgap",  s.packetGapMs);
+        s.packetGapUs    = p.getInt   ("pkus",  s.packetGapUs);
+        s.burstGapMs     = p.getInt   ("pgap",  s.burstGapMs);
         s.timeEnabled    = p.getBool  ("te",    s.timeEnabled);
         s.sleepTimeoutSec= p.getUShort("stSec", s.sleepTimeoutSec);
         s.brightness     = p.getUChar ("bright",s.brightness);
@@ -85,7 +87,8 @@ public:
         p.putString("ssid",  s.wifiSsid);
         p.putString("pass",  s.wifiPass);
         p.putInt   ("rpt",   s.repeatCount);
-        p.putInt   ("pgap",  s.packetGapMs);
+        p.putInt   ("pkus",  s.packetGapUs);
+        p.putInt   ("pgap",  s.burstGapMs);
         p.putBool  ("te",    s.timeEnabled);
         p.putUShort("stSec", s.sleepTimeoutSec);
         p.putUChar ("bright",s.brightness);

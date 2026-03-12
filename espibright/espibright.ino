@@ -53,7 +53,8 @@ void setup() {
 
     // Apply TX settings
     rf.setRepeatCount(s.repeatCount);
-    rf.setPacketGapMs(s.packetGapMs);
+    rf.setPacketGapUs(s.packetGapUs);
+    rf.setBurstGapMs(s.burstGapMs);
     rf.setTimeEnabled(s.timeEnabled);
     rf.setDeviceAddr(s.deviceAddr);
 

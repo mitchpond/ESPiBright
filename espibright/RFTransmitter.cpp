@@ -59,9 +59,11 @@ void RFTransmitter::flush(const char* label) {
 
     // Repeated section
     for (int rep = 0; rep < repeatCount_; rep++) {
-        for (int i = 0; i < bufN_; i++)
+        for (int i = 0; i < bufN_; i++) {
             transmitOnce(buf_[i].pkt);
-        if (rep < repeatCount_ - 1 && packetGapMs_ > 0) delay(packetGapMs_);
+            if (i < bufN_ - 1 && packetGapUs_ > 0) delayMicroseconds(packetGapUs_);
+        }
+        if (rep < repeatCount_ - 1 && burstGapMs_ > 0) delay(burstGapMs_);
     }
     // Tail section — once, after all repeats
     for (int i = 0; i < tailN_; i++)

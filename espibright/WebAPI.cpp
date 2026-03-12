@@ -86,6 +86,7 @@ void WebAPI::begin() {
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
     server_.on("/api/settings/repeat",     HTTP_POST, [this](){ handleRepeatSet_(); });
     server_.on("/api/settings/packet_gap", HTTP_POST, [this](){ handlePacketGapSet_(); });
+    server_.on("/api/settings/burst_gap",  HTTP_POST, [this](){ handleBurstGapSet_(); });
     server_.on("/api/settings/device",     HTTP_GET,  [this](){ handleSettingsDevGet_(); });
     server_.on("/api/settings/device",     HTTP_POST, [this](){ handleSettingsDevPost_(); });
     server_.on("/api/reboot",              HTTP_POST, [this](){ handleReboot_(); });
@@ -98,7 +99,8 @@ void WebAPI::begin() {
         "/api/time/set", "/api/time/send", "/api/time/ntp",
         "/api/schedule/set", "/api/schedule/send",
         "/api/settings/time_global", "/api/settings/repeat",
-        "/api/settings/packet_gap", "/api/settings/device", "/api/reboot"
+        "/api/settings/packet_gap", "/api/settings/burst_gap",
+        "/api/settings/device", "/api/reboot"
     };
     for (auto r : corsPaths)
         server_.on(r, HTTP_OPTIONS, [this](){ handleOptions_(); });
@@ -134,7 +136,8 @@ void WebAPI::handleApiStatus_() {
              + ",\"ms_ago\":"   + (rf_.lastMs() ? String(millis() - rf_.lastMs()) : String("null"))
              + ",\"send_time_global\":" + (rf_.timeEnabled() ? "true" : "false")
              + ",\"repeat_count\":"    + rf_.repeatCount()
-             + ",\"packet_gap_ms\":"   + rf_.packetGapMs()
+             + ",\"packet_gap_us\":"   + rf_.packetGapUs()
+             + ",\"burst_gap_ms\":"    + rf_.burstGapMs()
              + ",\"battery_pct\":"     + bat
              + ",\"build\":\""         + FW_BUILD + "\""
              + ",\"time\":{\"hh\":" + clock_.hh
@@ -371,13 +374,28 @@ void WebAPI::handlePacketGapSet_() {
     sendCors_();
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+    int g = doc["gap_us"] | -1;
+    if (g < 0 || g > 9999) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"gap_us must be 0-9999\"}");
+        return;
+    }
+    rf_.setPacketGapUs(g);
+    store_.settings.packetGapUs = rf_.packetGapUs();
+    store_.saveSettings();
+    server_.send(200, "application/json", JSON_OK);
+}
+
+void WebAPI::handleBurstGapSet_() {
+    sendCors_();
+    JsonDocument doc;
+    if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
     int g = doc["gap_ms"] | -1;
     if (g < 0 || g > 1000) {
         server_.send(400, "application/json", "{\"ok\":false,\"error\":\"gap_ms must be 0-1000\"}");
         return;
     }
-    rf_.setPacketGapMs(g);
-    store_.settings.packetGapMs = rf_.packetGapMs();
+    rf_.setBurstGapMs(g);
+    store_.settings.burstGapMs = rf_.burstGapMs();
     store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
@@ -387,7 +405,8 @@ void WebAPI::handleSettingsDevGet_() {
     char addrHex[5];
     snprintf(addrHex, sizeof(addrHex), "0x%02X", rf_.deviceAddr());
     String j = String("{\"repeat_count\":")      + rf_.repeatCount()
-             + ",\"packet_gap_ms\":"             + rf_.packetGapMs()
+             + ",\"packet_gap_us\":"             + rf_.packetGapUs()
+             + ",\"burst_gap_ms\":"              + rf_.burstGapMs()
              + ",\"time_enabled\":"              + (rf_.timeEnabled() ? "true" : "false")
              + ",\"sleep_timeout_sec\":"         + (display_.sleepTimeout() / 1000)
              + ",\"brightness\":"               + display_.wakeBrightness()
@@ -411,9 +430,13 @@ void WebAPI::handleSettingsDevPost_() {
         int n = doc["repeat_count"].as<int>();
         if (n >= 1 && n <= 20) { rf_.setRepeatCount(n); store_.settings.repeatCount = rf_.repeatCount(); }
     }
-    if (!doc["packet_gap_ms"].isNull()) {
-        int g = doc["packet_gap_ms"].as<int>();
-        if (g >= 0 && g <= 1000) { rf_.setPacketGapMs(g); store_.settings.packetGapMs = rf_.packetGapMs(); }
+    if (!doc["packet_gap_us"].isNull()) {
+        int g = doc["packet_gap_us"].as<int>();
+        if (g >= 0 && g <= 9999) { rf_.setPacketGapUs(g); store_.settings.packetGapUs = rf_.packetGapUs(); }
+    }
+    if (!doc["burst_gap_ms"].isNull()) {
+        int g = doc["burst_gap_ms"].as<int>();
+        if (g >= 0 && g <= 1000) { rf_.setBurstGapMs(g); store_.settings.burstGapMs = rf_.burstGapMs(); }
     }
     if (!doc["time_enabled"].isNull()) {
         rf_.setTimeEnabled(doc["time_enabled"].as<bool>());

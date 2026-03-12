@@ -13,7 +13,8 @@
 //   1. clearBuf()           — reset the packet buffer
 //   2. addToBuf(p8, note)   — append a packet (up to BUF_CAP)
 //   3. flush(label)         — repeat the whole buffer repeatCount times,
-//                             with a 1 ms gap between full-batch repeats,
+//                             with packetGapUs between packets within a repeat
+//                             and burstGapMs between repeats,
 //                             then log and fire onTransmit
 //
 // sendPkt() and sendTimePackets() use this internally; callers that need to
@@ -59,14 +60,16 @@ public:
 
     // ── Configurable TX settings ──────────────────────────────────────────────
     // Setters enforce valid ranges; callers do not need to pre-validate.
-    void setTimeEnabled(bool en)    { timeEnabled_  = en; }
-    void setRepeatCount(int n)      { repeatCount_  = constrain(n,  1,   20); }
-    void setPacketGapMs(int ms)     { packetGapMs_  = constrain(ms, 0, 1000); }
-    void setDeviceAddr(uint8_t a)   { addr0_ = a ? a : PROTO_ADDR0; }
+    void setTimeEnabled(bool en)   { timeEnabled_  = en; }
+    void setRepeatCount(int n)     { repeatCount_  = constrain(n,  1,   20); }
+    void setPacketGapUs(int us)    { packetGapUs_  = constrain(us, 0, 9999); }
+    void setBurstGapMs(int ms)     { burstGapMs_   = constrain(ms, 0, 1000); }
+    void setDeviceAddr(uint8_t a)  { addr0_ = a ? a : PROTO_ADDR0; }
 
     bool    timeEnabled()  const { return timeEnabled_; }
     int     repeatCount()  const { return repeatCount_; }
-    int     packetGapMs()  const { return packetGapMs_; }
+    int     packetGapUs()  const { return packetGapUs_; }
+    int     burstGapMs()   const { return burstGapMs_;  }
     uint8_t deviceAddr()   const { return addr0_; }
 
     // ── Last TX metadata (read-only; written by recordTx_) ────────────────────
@@ -84,7 +87,8 @@ private:
 
     bool          timeEnabled_  = true;
     int           repeatCount_  = TX_REPEAT;
-    int           packetGapMs_  = TX_PACKET_GAP_MS;
+    int           packetGapUs_  = TX_PACKET_GAP_US;
+    int           burstGapMs_   = TX_BURST_GAP_MS;
     uint8_t       addr0_        = PROTO_ADDR0;
     char          lastLabel_[48] = "none";
     char          lastHex_[20]   = "--";
