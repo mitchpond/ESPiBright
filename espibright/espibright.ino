@@ -51,12 +51,15 @@ void setup() {
     display.drawBootSplash();
     display.drawConnecting();
 
+    // Load fixture settings before applying RF address
+    store.loadFixtures();
+
     // Apply TX settings
     rf.setRepeatCount(s.repeatCount);
     rf.setPacketGapUs(s.packetGapUs);
     rf.setBurstGapMs(s.burstGapMs);
     rf.setTimeEnabled(s.timeEnabled);
-    rf.setDeviceAddr(s.deviceAddr);
+    rf.setDeviceAddr(store.fixtures[0].addr);
 
     // Restore persisted channel/schedule state before anything transmits
     store.loadAll(channels, schedule);

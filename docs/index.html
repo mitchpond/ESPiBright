@@ -328,8 +328,35 @@ details[open] .chev{transform:rotate(180deg)}
 #toast.err{border-color:var(--orange);color:var(--orange)}
 
 /* ── Mobile (≤600px — iPhone Pro baseline) ──────────────────────────────── */
+/* Fixture tabs */
+.fixture-bar{display:flex;align-items:center;gap:0;padding:12px 18px 0;overflow-x:auto}
+.ftabs{display:flex;gap:3px;flex:1;overflow-x:auto;min-width:0}
+.ftab{font-family:var(--sans);font-size:.75rem;font-weight:600;padding:7px 16px;
+  border:1px solid var(--border);border-bottom:none;border-radius:var(--r) var(--r) 0 0;
+  background:var(--panel2);color:var(--dim);cursor:pointer;white-space:nowrap;
+  transition:background .13s,color .13s,border-color .13s;flex-shrink:0}
+.ftab:hover:not(.fa){color:var(--text);border-color:var(--border2)}
+.ftab.fa{background:var(--panel);color:var(--accent);border-color:var(--accent)}
+.ftab-add{font-size:1.1rem;line-height:1;width:30px;height:30px;flex-shrink:0;
+  border-radius:var(--rs);border:1px dashed var(--border2);background:transparent;
+  color:var(--dim);cursor:pointer;transition:border-color .13s,color .13s;margin-left:6px;
+  align-self:flex-end;margin-bottom:1px}
+.ftab-add:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.ftab-add:disabled{opacity:.3;cursor:default}
+/* Fixture settings list */
+.fxrow{display:flex;align-items:center;gap:6px;padding:3px 0}
+.fxrow-name{flex:1;min-width:0}
+.fxrow-addr-wrap{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.fxrow-addr{width:44px;text-transform:uppercase;font-family:var(--mono)}
+.fxrow-del{font-size:.72rem;padding:4px 9px;border-radius:4px;
+  background:var(--panel2);border:1px solid var(--border2);
+  color:var(--dim);cursor:pointer;flex-shrink:0;transition:border-color .12s,color .12s}
+.fxrow-del:hover{border-color:var(--orange);color:var(--orange)}
 @media(max-width:600px){
   /* Layout */
+  /* Fixture tabs */
+  .fixture-bar{padding:10px 12px 0}
+  .ftab{padding:6px 12px;font-size:.72rem}
   main{padding:12px 10px;gap:14px}
 
   /* Header */
@@ -382,67 +409,50 @@ details[open] .chev{transform:rotate(180deg)}
   .ep{font-size:.68rem;word-break:break-all}
   .ad{font-size:.66rem}
 }
-
-.demo-banner{background:linear-gradient(90deg,#b060ff22,#00d4ff22);border-bottom:1px solid #b060ff44;
-  text-align:center;padding:6px 16px;font-family:var(--mono);font-size:.68rem;color:var(--purple);letter-spacing:.08em}
-[data-theme="light"] .demo-banner{background:linear-gradient(90deg,#6e38c822,#0094b822);border-bottom:1px solid #6e38c844}
 </style>
-</head>
-<body>
-<script>
-window.__PACKETS__ = [
-  {index:0,label:"ALL ON",group:"Power",hex:"d0238a8a8601a6e4",send_time:true},
-  {index:1,label:"ALL OFF",group:"Power",hex:"d0230a0a0600a61f",send_time:true},
-  {index:2,label:"DIM 10%",group:"Dim",hex:"d023818181061631",send_time:true},
-  {index:3,label:"DIM 50%",group:"Dim",hex:"d023858585065652",send_time:true},
-  {index:4,label:"DIM 75%",group:"Dim",hex:"d023878787067674",send_time:true},
-  {index:5,label:"DIM 100%",group:"Dim",hex:"d0238a8a8601a6e4",send_time:true},
-  {index:6,label:"WHITE ONLY 100",group:"Channel",hex:"d0238a0a0601a61a",send_time:true},
-  {index:7,label:"WHITE ONLY 50",group:"Channel",hex:"d02385050601561e",send_time:true},
-  {index:8,label:"BLUE ONLY 100",group:"Channel",hex:"d0230a8a0601a619",send_time:true},
-  {index:9,label:"BLUE ONLY 50",group:"Channel",hex:"d023058501015695",send_time:true},
-  {index:10,label:"SCHED TYPE 03",group:"Schedule",hex:"d02317000000033a",send_time:false},
-  {index:11,label:"SCHED TYPE 08",group:"Schedule",hex:"d0230b00860008c2",send_time:false},
-  {index:12,label:"TIME HMS",group:"Time",hex:"d023131414001d00",send_time:false}
-];
 
-const _DEMO_DEV={device_addr:208,repeat_count:5,packet_gap_us:0,burst_gap_ms:1,time_enabled:true,sleep_timeout_sec:180,brightness:180,hostname:'ESPiBright',wifi_ssid:'your-ssid',wifi_pass:'***',tz_offset_sec:-18000};
-const _DEMO={label:'CHANNEL CMD',hex:'d0238a8a8601a6e4',ms_ago:4200,send_time_global:true,repeat_count:5,packet_gap_us:0,burst_gap_ms:1,battery_pct:78,build:'26.3.1000',
-  time:{hh:19,mm:20,ss:29},
-  channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:8,rgb_cycle:1,rgb_level:10},
-  schedule:{white_on:{active:true,hh:11,mm:0},white_off:{active:true,hh:23,mm:0},
-    blue_on:{active:true,hh:11,mm:0},blue_off:{active:true,hh:23,mm:30},
-    rgb_on:{active:true,hh:11,mm:0,state:0x88,cycle:1},rgb_off:{active:true,hh:23,mm:0,state:0x08}},
-  logSeq:4,log:[
+<script>
+const _DEMO_FIXTURES=[
+  {index:0,name:'Freshwater',addr:0xD0},
+  {index:1,name:'Reef Tank',addr:0xA3}
+];
+const _DEMO_DEV={repeat_count:5,packet_gap_us:0,burst_gap_ms:1,time_enabled:true,sleep_timeout_sec:180,brightness:180,hostname:'ESPiBright',wifi_ssid:'your-ssid',wifi_pass:'***',tz_offset_sec:-18000};
+const _DEMO_FX=[
+  {channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:8,rgb_cycle:1,rgb_level:10},
+   schedule:{white_on:{active:true,hh:11,mm:0},white_off:{active:true,hh:23,mm:0},blue_on:{active:true,hh:11,mm:0},blue_off:{active:true,hh:23,mm:30},rgb_on:{active:true,hh:11,mm:0,state:0x88},rgb_off:{active:true,hh:23,mm:0,state:0x08}}},
+  {channels:{white_on:false,white_level:6,blue_on:true,blue_level:8,rgb_on:true,rgb_color:1,rgb_cycle:2,rgb_level:7},
+   schedule:{white_on:{active:false,hh:10,mm:0},white_off:{active:false,hh:22,mm:0},blue_on:{active:true,hh:10,mm:0},blue_off:{active:true,hh:22,mm:0},rgb_on:{active:true,hh:10,mm:0,state:0x81},rgb_off:{active:true,hh:22,mm:0,state:0x01}}}
+];
+const _DEMO={label:'CHANNEL CMD',hex:'d0238a8a8601a6e4',ms_ago:4200,send_time_global:true,repeat_count:5,packet_gap_us:0,burst_gap_ms:1,battery_pct:78,build:'26.3.2000',
+  time:{hh:19,mm:20,ss:29},logSeq:4,log:[
     {seq:4,ms:142000,label:'CHANNEL CMD',pkts:[{hex:'d0238a8a8601a6e4',note:'CMD'},{hex:'d023131414001d00',note:'HMS'}]},
     {seq:3,ms:98000,label:'TIME SEND',pkts:[{hex:'d023131414001d00',note:'HMS'}]},
     {seq:2,ms:97000,label:'SCHEDULE',pkts:[
-      {hex:'d023170000000374',note:'WhOFF(03)'},
-      {hex:'d0230b0000000497',note:'WhON(04)'},
-      {hex:'d0230b0000000598',note:'BlON(05)'},
-      {hex:'d023880000000761',note:'STATE(07)'},
-      {hex:'d0230b0088000842',note:'RGBON(08)'},
-      {hex:'d0230b0008000952',note:'RGBOFF(09)'},
-      {hex:'d023170000000212',note:'BlOFF(02)'}
-    ]},
+      {hex:'d023170000000374',note:'WhOFF(03)'},{hex:'d0230b0000000497',note:'WhON(04)'},
+      {hex:'d0230b0000000598',note:'BlON(05)'},{hex:'d023880000000761',note:'STATE(07)'},
+      {hex:'d0230b0088000842',note:'RGBON(08)'},{hex:'d0230b0008000952',note:'RGBOFF(09)'},
+      {hex:'d023170000000212',note:'BlOFF(02)'}]},
     {seq:1,ms:34000,label:'TIME SEND',pkts:[{hex:'d023131414001d00',note:'HMS'}]}]};
 function _fakeHex(){return 'd023'+Array.from({length:6},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('');}
 function _timeHex(t){const h=(v)=>v.toString(16).padStart(2,'0');return 'd023'+h(t.hh)+h(t.mm)+h(t.ss)+'000100';}
 window.fetch=function(url,opts){
-  const path=url.split('?')[0];let body={};try{body=JSON.parse(opts&&opts.body||'{}');}catch(_){}
+  const path=url.split('?')[0];const qs=url.includes('?')?url.split('?')[1]:'';
+  const qp={};qs.split('&').forEach(p=>{const[k,v]=p.split('=');if(k)qp[k]=v;});
+  let body={};try{body=JSON.parse(opts&&opts.body||'{}');}catch(_){}
+  const fix=parseInt(qp.fixture??body.fixture??0)||0;
+  const fxd=()=>_DEMO_FX[fix]||_DEMO_FX[0];
   return new Promise(resolve=>{setTimeout(()=>{let data;
     if(path==='/api/status'){_DEMO.ms_ago+=2000;data={label:_DEMO.label,hex:_DEMO.hex,ms_ago:_DEMO.ms_ago,send_time_global:_DEMO.send_time_global,repeat_count:_DEMO.repeat_count,packet_gap_us:_DEMO.packet_gap_us,burst_gap_ms:_DEMO.burst_gap_ms,battery_pct:_DEMO.battery_pct,build:_DEMO.build,time:_DEMO.time};}
-    else if(path==='/api/channels'){data={..._DEMO.channels};}
-    else if(path==='/api/schedule'){data={..._DEMO.schedule};}
-    else if(path==='/api/packets'){data=window.__PACKETS__;}
-    else if(path==='/api/log'){const since=parseInt((url.split('since=')[1]||'0'))||0;data={count:_DEMO.logSeq,entries:_DEMO.log.filter(e=>e.seq>since)};}
-    else if(path==='/api/send/channels'){Object.assign(_DEMO.channels,body);const h=_fakeHex();_DEMO.label='CHANNEL CMD';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'CHANNEL CMD',pkts:[{hex:h,note:'CMD'},{hex:_timeHex(_DEMO.time),note:'HMS'}]});data={ok:true,label:'CHANNEL CMD',hex:h};}
-    else if(path==='/api/send/index'){const pkt=(window.__PACKETS__||[])[body.index]||{};const h=pkt.hex||_fakeHex();_DEMO.label=pkt.label||'PKT';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:_DEMO.label,pkts:[{hex:h,note:'CMD'}]});data={ok:true,label:_DEMO.label,hex:h};}
-    else if(path==='/api/send/raw'){const h=(body.payload||'d023000000000000')+'00';_DEMO.label='RAW';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'RAW',pkts:[{hex:h,note:'CMD'}]});data={ok:true,hex:h};}
+    else if(path==='/api/fixtures'){data=_DEMO_FIXTURES.map(f=>({...f}));}
+    else if(path==='/api/channels'){data={...fxd().channels};}
+    else if(path==='/api/schedule'){data={...fxd().schedule};}
+    else if(path==='/api/log'){const since=parseInt(qp.since||'0')||0;data={count:_DEMO.logSeq,entries:_DEMO.log.filter(e=>e.seq>since)};}
+    else if(path==='/api/send/channels'){Object.assign(fxd().channels,body);const h=_fakeHex();_DEMO.label='CHANNEL CMD';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'CHANNEL CMD',pkts:[{hex:h,note:'CMD'},{hex:_timeHex(_DEMO.time),note:'HMS'}]});data={ok:true,label:'CHANNEL CMD',hex:h};}
+    else if(path==='/api/send/raw'){const h=(body.payload||'d023000000000000').replace(/\s/g,'').substring(0,14).padEnd(14,'0')+'00';_DEMO.label='RAW';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'RAW',pkts:[{hex:h,note:'CMD'}]});data={ok:true,hex:h};}
     else if(path==='/api/time/set'){Object.assign(_DEMO.time,body);data={ok:true};}
     else if(path==='/api/time/ntp'){const n=new Date();Object.assign(_DEMO.time,{hh:n.getHours(),mm:n.getMinutes(),ss:n.getSeconds()});data={ok:true,hh:_DEMO.time.hh,mm:_DEMO.time.mm,ss:_DEMO.time.ss};}
     else if(path==='/api/time/send'){const h=_timeHex(_DEMO.time);_DEMO.label='TIME SEND';_DEMO.hex=h;_DEMO.ms_ago=0;_DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'TIME SEND',pkts:[{hex:h,note:'HMS'}]});data={ok:true};}
-    else if(path==='/api/schedule/set'){Object.assign(_DEMO.schedule,body);data={ok:true};}
+    else if(path==='/api/schedule/set'){Object.assign(fxd().schedule,body);data={ok:true};}
     else if(path==='/api/schedule/send'){
       const th=_timeHex(_DEMO.time);
       _DEMO.log.unshift({seq:++_DEMO.logSeq,ms:performance.now()|0,label:'TIME SEND',pkts:[{hex:th,note:'HMS'}]});
@@ -452,20 +462,24 @@ window.fetch=function(url,opts){
         {hex:_fakeHex(),note:'BlON(05)'},{hex:_fakeHex(),note:'STATE(07)'},
         {hex:_fakeHex(),note:'RGBON(08)'},{hex:_fakeHex(),note:'RGBOFF(09)'},
         {hex:_fakeHex(),note:'BlOFF(02)'}
-      ]});
-      data={ok:true};}
+      ]});data={ok:true};}
+    else if(path==='/api/fixtures/add'){if(_DEMO_FIXTURES.length<4){const idx=_DEMO_FIXTURES.length;_DEMO_FIXTURES.push({index:idx,name:'Fixture '+(idx+1),addr:Math.floor(Math.random()*255)+1});_DEMO_FX.push({channels:{white_on:true,white_level:10,blue_on:true,blue_level:10,rgb_on:true,rgb_color:1,rgb_cycle:1,rgb_level:10},schedule:{white_on:{active:false,hh:11,mm:0},white_off:{active:false,hh:23,mm:0},blue_on:{active:false,hh:11,mm:0},blue_off:{active:false,hh:23,mm:0},rgb_on:{active:false,hh:11,mm:0,state:0x81},rgb_off:{active:false,hh:22,mm:0,state:0x01}}});data={ok:true};}else{data={ok:false,error:'max fixtures reached'};}}
+    else if(path==='/api/fixtures/remove'){const i=body.index||0;if(_DEMO_FIXTURES.length>1){_DEMO_FIXTURES.splice(i,1);_DEMO_FX.splice(i,1);_DEMO_FIXTURES.forEach((f,j)=>f.index=j);data={ok:true};}else{data={ok:false,error:'cannot remove last fixture'};}}
+    else if(path==='/api/fixtures/update'){const f=_DEMO_FIXTURES.find(f=>f.index===body.index);if(f){if(body.name!=null)f.name=body.name;if(body.addr!=null)f.addr=body.addr;data={ok:true};}else{data={ok:false,error:'not found'};}}
     else if(path==='/api/settings/time_global'){_DEMO.send_time_global=body.enabled;data={ok:true};}
     else if(path==='/api/settings/device'&&opts&&opts.method==='POST'){Object.assign(_DEMO_DEV,body);if(body.wifi_pass)_DEMO_DEV.wifi_pass='***';_DEMO.repeat_count=_DEMO_DEV.repeat_count||_DEMO.repeat_count;if(body.packet_gap_us!=null)_DEMO.packet_gap_us=body.packet_gap_us;if(body.burst_gap_ms!=null)_DEMO.burst_gap_ms=body.burst_gap_ms;data={ok:true,reboot_required:!!(body.hostname||body.wifi_ssid||body.wifi_pass||body.tz_offset_sec!=null)};}
     else if(path==='/api/settings/device'){data={..._DEMO_DEV};}
-    else if(path==='/api/reboot'){data={ok:true};}
     else if(path==='/api/settings/repeat'){_DEMO.repeat_count=body.count;_DEMO_DEV.repeat_count=body.count;data={ok:true};}
     else if(path==='/api/settings/packet_gap'){_DEMO.packet_gap_us=body.gap_us;_DEMO_DEV.packet_gap_us=body.gap_us;data={ok:true};}
     else if(path==='/api/settings/burst_gap'){_DEMO.burst_gap_ms=body.gap_ms;_DEMO_DEV.burst_gap_ms=body.gap_ms;data={ok:true};}
-    else{data={ok:false,error:'demo: unknown endpoint'};}
+    else if(path==='/api/reboot'){data={ok:true};}
+    else{data={ok:false,error:'demo: unknown endpoint '+path};}
     resolve({ok:true,json:()=>Promise.resolve(data)});},40+Math.random()*60);});};
 </script>
+<style>.demo-banner{background:linear-gradient(90deg,#b060ff22,#00d4ff22);border-bottom:1px solid #b060ff44;color:#b060ff;font-size:.75rem;font-weight:600;text-align:center;padding:6px 12px;letter-spacing:.04em}[data-theme="light"] .demo-banner{background:linear-gradient(90deg,#6e38c822,#0094b822);border-bottom:1px solid #6e38c844;color:#6e38c8}</style>
+</head>
+<body>
 <div class="demo-banner">⚡ DEMO MODE — API calls are simulated. No device connected.</div>
-
 
 <header>
   <div class="logo">&#9685;</div>
@@ -481,6 +495,13 @@ window.fetch=function(url,opts){
 </header>
 
 <main>
+
+<!-- Fixture Tabs -->
+<div class="fixture-bar">
+  <div class="ftabs" id="ftabs"></div>
+  <button class="ftab-add" id="ftab-add" onclick="fixtureAdd()" title="Add fixture">+</button>
+</div>
+
 
 <!-- Last TX -->
 <div class="last-bar">
@@ -708,6 +729,12 @@ window.fetch=function(url,opts){
     <div class="card-body">
       <div class="settings-form">
 
+                <div class="cfg-section-hdr">Fixtures</div>
+        <div id="fixture-list"></div>
+        <div style="margin-top:5px">
+          <button class="btn btn-s btn-sm" id="fx-add-btn" onclick="fixtureAdd()">+ Add Fixture</button>
+        </div>
+
         <div class="cfg-section-hdr">Transmission</div>
         <div class="cfg-row">
           <span class="cfg-lbl">Burst repeat count</span>
@@ -734,13 +761,6 @@ window.fetch=function(url,opts){
           <span class="cfg-lbl">Send time packet after burst</span>
           <label class="sw"><input type="checkbox" id="cfg-time" checked><span class="sw-tr"></span></label>
         </div>
-        <div class="cfg-row">
-          <span class="cfg-lbl">Device address</span>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-family:var(--mono);color:var(--dim);font-size:.8rem">0x</span>
-            <input type="text" class="cfg-inp" id="cfg-addr" maxlength="2" placeholder="D0" style="width:48px;text-transform:uppercase;font-family:var(--mono)">
-            <span class="pct">fixture must power-cycle to learn new address</span>
-          </div>
         </div>
 
         <div class="cfg-section-hdr">Display</div>
@@ -794,19 +814,6 @@ window.fetch=function(url,opts){
   </details>
 </div>
 
-<!-- Known Packets -->
-<div class="card">
-  <details>
-    <summary>
-      <div class="card-hdr sum-row" style="border-bottom:none">
-        <span class="card-title">Known Packets</span>
-        <span class="chev">&#9660;</span>
-      </div>
-    </summary>
-    <div class="card-body" id="pkt-container"></div>
-  </details>
-</div>
-
 <!-- Packet Crafter -->
 <div class="card">
   <details>
@@ -839,23 +846,27 @@ window.fetch=function(url,opts){
       <table class="api-tbl">
         <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/packets</td><td class="ad">All known packets as JSON.</td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle, battery level, firmware build.</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/index</td><td class="ad">Known packet by index. <code>{"index":0}</code></td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/fixtures</td><td class="ad">List all fixtures. Returns array of <code>{index, name, addr}</code>.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/channels?fixture=N</td><td class="ad">Current channel state for fixture N.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/schedule?fixture=N</td><td class="ad">Current schedule slots for fixture N.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Transmit channel state to fixture. <code>{"fixture":0,"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/raw</td><td class="ad">7-byte payload (CRC auto). <code>{"payload":"d0238a8a8601a6","send_time":true}</code></td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/set</td><td class="ad">Set time. <code>{"hh":19,"mm":20,"ss":29}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/send</td><td class="ad">Transmit time packets immediately.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/ntp</td><td class="ad">Re-sync ESP clock from NTP. Returns <code>{"ok":true,"hh":…,"mm":…,"ss":…}</code></td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Set schedule slots.<br><code>{"off":[{"active":true,"hh":23,"mm":0},{"active":true,"hh":11,"mm":0},{"active":false,"hh":0,"mm":0}],"on":[{"active":true,"hh":11,"mm":0},{"active":true,"hh":23,"mm":0}]}</code><br>State byte for ON slots and type 07 auto-computed from current channel state.</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Persist schedule slots for fixture. <code>{"fixture":0,"white_on":{…},"white_off":{…},"blue_on":{…},"blue_off":{…},"rgb_on":{…},"rgb_off":{…}}</code> — each slot: <code>{"active":true,"hh":23,"mm":0}</code>; rgb slots add <code>"state":N</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots for fixture. <code>{"fixture":0}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/add</td><td class="ad">Add a new fixture (max 4).</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/remove</td><td class="ad">Remove fixture by index. <code>{"index":N}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/update</td><td class="ad">Rename or change RF address. <code>{"index":N,"name":"…","addr":N}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/packet_gap</td><td class="ad">Set inter-packet gap (0–9999 µs). <code>{"gap_us":0}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/burst_gap</td><td class="ad">Set inter-burst gap (0–1000 ms). <code>{"gap_ms":1}</code></td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_us</code>, <code>burst_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>, <code>device_addr</code> (1–255; fixture must power-cycle to learn). Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_us</code>, <code>burst_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
         </tbody>
       </table>
@@ -947,6 +958,7 @@ async function sendChannels(){
     CH.rgb.cycle=1;
   }
   const r=await api('/api/send/channels','POST',{
+    fixture:activeFix,
     white_on:CH.white.on,white_level:CH.white.level,
     blue_on:CH.blue.on,blue_level:CH.blue.level,
     rgb_on:CH.rgb.on,rgb_color:CH.rgb.color,rgb_cycle:CH.rgb.cycle,rgb_level:CH.rgb.level
@@ -1087,42 +1099,11 @@ function readSched() {
 }
 
 async function sendSchedule(){
-  const r = await api('/api/schedule/set','POST', readSched());
+  const sched = readSched(); sched.fixture = activeFix;
+  const r = await api('/api/schedule/set','POST', sched);
   if(!r.ok){toast('✗ set failed',true);return;}
-  const r2 = await api('/api/schedule/send','POST',{});
+  const r2 = await api('/api/schedule/send','POST',{fixture: activeFix});
   r2.ok?toast('✓ schedule sent'):toast('✗ '+(r2.error||'error'),true);
-}
-
-// ── Known packets grid ──
-async function loadPackets(){
-  const pkts=await api('/api/packets');
-  if(!Array.isArray(pkts))return;
-  const groups=['Power','Dim','Channel','Schedule','Time'];
-  const byGroup={};
-  pkts.forEach(p=>(byGroup[p.group]=byGroup[p.group]||[]).push(p));
-  const cont=document.getElementById('pkt-container');
-  groups.forEach(g=>{
-    if(!byGroup[g])return;
-    const wrap=document.createElement('div');
-    wrap.style.marginBottom='15px';
-    const lbl=document.createElement('div');lbl.className='grp-lbl';lbl.textContent=g;
-    const grid=document.createElement('div');grid.className='pkt-grid-wrap g'+g;
-    byGroup[g].forEach(p=>{
-      const btn=document.createElement('button');btn.className='pkt-btn';
-      btn.textContent=p.label;
-      if(p.send_time){const s=document.createElement('span');s.className='tbadge';s.textContent='+T';btn.appendChild(s);}
-      btn.onclick=()=>sendIndex(p.index,btn);
-      grid.appendChild(btn);
-    });
-    wrap.appendChild(lbl);wrap.appendChild(grid);cont.appendChild(wrap);
-  });
-}
-async function sendIndex(idx,btn){
-  btn&&btn.classList.add('firing');
-  const r=await api('/api/send/index','POST',{index:idx});
-  if(r.ok){toast('✓ '+r.label);updLastBar(r.label,r.hex);}
-  else toast('✗ '+(r.error||'error'),true);
-  setTimeout(()=>btn&&btn.classList.remove('firing'),500);
 }
 
 // ── Packet crafter ──
@@ -1222,7 +1203,6 @@ poll();setInterval(poll,10000);
 
 // Init
 updateRgbDurationRow();
-loadPackets();
 
 // ── TX Terminal ──
 let logSince = 0;
@@ -1311,12 +1291,13 @@ function clearLog() {
 
 // ── On-load: populate UI from device state ──
 async function loadDeviceState() {
+  await loadFixtures();
   try {
     const s = await api('/api/status','GET');
     if(s.time) applyEspTime(s.time.hh,s.time.mm,s.time.ss);
   } catch(e){}
   try {
-    const ch = await api('/api/channels','GET');
+    const ch = await api('/api/channels?fixture='+activeFix,'GET');
     CH.white.on=ch.white_on; setCh('white',ch.white_on);
     CH.white.level=ch.white_level;
     document.getElementById('sl-white').value=ch.white_level;
@@ -1338,7 +1319,7 @@ async function loadDeviceState() {
     updateRgbDurationRow();
   } catch(e){}
   try {
-    const sc = await api('/api/schedule','GET');
+    const sc = await api('/api/schedule?fixture='+activeFix,'GET');
     function fillSlot(pfx, slot) {
       document.getElementById(pfx+'-hh').value = String(slot.hh).padStart(2,'0');
       document.getElementById(pfx+'-mm').value = String(slot.mm).padStart(2,'0');
@@ -1367,11 +1348,118 @@ async function loadDeviceState() {
     }
   } catch(e){}
 }
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+let fixtureData = [];
+let activeFix = 0;
+
+async function loadFixtures() {
+  try {
+    const fs = await api('/api/fixtures','GET');
+    if (!Array.isArray(fs)) return;
+    fixtureData = fs;
+    if (activeFix >= fixtureData.length) activeFix = 0;
+    renderFixtureTabs();
+    renderFixtureSettings();
+  } catch(e) {}
+}
+
+function renderFixtureTabs() {
+  const tabs = document.getElementById('ftabs');
+  if (!tabs) return;
+  tabs.innerHTML = '';
+  fixtureData.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'ftab' + (f.index === activeFix ? ' fa' : '');
+    btn.textContent = f.name;
+    btn.title = '0x' + f.addr.toString(16).toUpperCase().padStart(2,'0');
+    btn.onclick = () => fixtureSelect(f.index);
+    tabs.appendChild(btn);
+  });
+  const maxed = fixtureData.length >= 4;
+  const addBtn = document.getElementById('ftab-add');
+  if (addBtn) addBtn.disabled = maxed;
+  const addBtn2 = document.getElementById('fx-add-btn');
+  if (addBtn2) addBtn2.disabled = maxed;
+}
+
+function renderFixtureSettings() {
+  const list = document.getElementById('fixture-list');
+  if (!list) return;
+  list.innerHTML = '';
+  fixtureData.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'fxrow';
+    const nameId = 'fx-name-' + f.index;
+    const addrId = 'fx-addr-' + f.index;
+    const addrHex = f.addr.toString(16).toUpperCase().padStart(2, '0');
+    const delBtn = fixtureData.length > 1
+      ? `<button class="fxrow-del" onclick="fixtureRemove(${f.index})" title="Remove fixture">✕</button>`
+      : '';
+    row.innerHTML =
+      `<input type="text" class="cfg-inp fxrow-name" id="${nameId}" maxlength="16" value="" placeholder="Fixture ${f.index+1}">` +
+      `<div class="fxrow-addr-wrap"><span style="font-family:var(--mono);color:var(--dim);font-size:.8rem">0x</span>` +
+      `<input type="text" class="cfg-inp fxrow-addr" id="${addrId}" maxlength="2" value="">` +
+      `</div>` + delBtn;
+    list.appendChild(row);
+    const ni = document.getElementById(nameId);
+    const ai = document.getElementById(addrId);
+    if (ni) { ni.value = f.name; ni.addEventListener('blur', () => fixtureUpdate(f.index)); }
+    if (ai) { ai.value = addrHex; ai.addEventListener('blur', () => fixtureUpdate(f.index)); }
+  });
+}
+
+async function fixtureSelect(idx) {
+  if (idx === activeFix) return;
+  activeFix = idx;
+  renderFixtureTabs();
+  await loadDeviceState();
+  const f = fixtureData.find(f => f.index === idx);
+  if (f) toast('✓ ' + f.name);
+}
+
+async function fixtureAdd() {
+  const r = await api('/api/fixtures/add','POST',{});
+  if (!r.ok) { toast('✗ ' + (r.error || 'add failed'), true); return; }
+  await loadFixtures();
+  toast('✓ fixture added');
+}
+
+async function fixtureRemove(idx) {
+  const f = fixtureData.find(f => f.index === idx);
+  if (!confirm('Remove ' + (f ? f.name : 'fixture') + '? Its settings will be lost.')) return;
+  const r = await api('/api/fixtures/remove','POST',{index: idx});
+  if (!r.ok) { toast('✗ ' + (r.error || 'remove failed'), true); return; }
+  if (activeFix >= fixtureData.length - 1) activeFix = Math.max(0, fixtureData.length - 2);
+  await loadFixtures();
+}
+
+async function fixtureUpdate(idx) {
+  const ni = document.getElementById('fx-name-' + idx);
+  const ai = document.getElementById('fx-addr-' + idx);
+  if (!ni || !ai) return;
+  const name = ni.value.trim() || ('Fixture ' + (idx + 1));
+  const addrVal = parseInt(ai.value, 16);
+  if (isNaN(addrVal) || addrVal < 1 || addrVal > 255) { toast('✗ invalid address', true); return; }
+  const r = await api('/api/fixtures/update','POST',{index: idx, name, addr: addrVal});
+  if (r.ok) {
+    const f = fixtureData.find(f => f.index === idx);
+    if (f) { f.name = name; f.addr = addrVal; }
+    renderFixtureTabs();
+    ni.value = name;
+    ai.value = addrVal.toString(16).toUpperCase().padStart(2,'0');
+    toast('✓ saved');
+  } else {
+    toast('✗ ' + (r.error || 'update failed'), true);
+  }
+}
+
+
 // ── Device Settings ──────────────────────────────────────────────────────────
 document.getElementById('d-devset').addEventListener('toggle', function(){
   if (this.open) cfgLoad();
 });
 async function cfgLoad() {
+  renderFixtureSettings();
   try {
     const s = await api('/api/settings/device','GET');
     if (s.repeat_count != null)      document.getElementById('cfg-repeat').value  = s.repeat_count;
@@ -1385,7 +1473,6 @@ async function cfgLoad() {
     }
     if (s.hostname)    document.getElementById('cfg-host').value = s.hostname;
     if (s.wifi_ssid)   document.getElementById('cfg-ssid').value = s.wifi_ssid;
-    if (s.device_addr != null) document.getElementById('cfg-addr').value = s.device_addr.toString(16).toUpperCase().padStart(2,'0');
     if (s.tz_offset_sec != null)
       document.getElementById('cfg-tz').value = (s.tz_offset_sec / 3600).toFixed(1).replace(/\.0$/,'');
   } catch(e) {}
@@ -1400,8 +1487,6 @@ function cfgTogglePass() {
   btn.textContent = inp.type === 'password' ? 'show' : 'hide';
 }
 async function cfgSave() {
-  const addrHex = document.getElementById('cfg-addr').value.trim();
-  const addrVal = addrHex ? parseInt(addrHex, 16) : NaN;
   const body = {
     repeat_count:      parseInt(document.getElementById('cfg-repeat').value),
     packet_gap_us:     parseInt(document.getElementById('cfg-pgap').value),
@@ -1413,7 +1498,6 @@ async function cfgSave() {
     wifi_ssid:         document.getElementById('cfg-ssid').value.trim(),
     tz_offset_sec:     Math.round(parseFloat(document.getElementById('cfg-tz').value) * 3600)
   };
-  if (!isNaN(addrVal) && addrVal >= 1 && addrVal <= 255) body.device_addr = addrVal;
   const pw = document.getElementById('cfg-pass').value;
   if (pw) body.wifi_pass = pw;
   const r = await api('/api/settings/device','POST', body);

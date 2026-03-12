@@ -53,7 +53,7 @@
 // ── Firmware build number ─────────────────────────────────────────────────────
 // Format: YY.M.BUILD  (year-2000, month, sequential build counter)
 // Increment BUILD each release; update YY.M when the calendar month changes.
-#define FW_BUILD     "26.3.1000"
+#define FW_BUILD     "26.3.2000"
 
 // PROTO_ADDR0: compile-time default only. Actual per-device address is randomly
 // generated on first boot and stored in NVS. The fixture learns this address from

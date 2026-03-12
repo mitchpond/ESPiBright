@@ -331,8 +331,35 @@ details[open] .chev{transform:rotate(180deg)}
 #toast.err{border-color:var(--orange);color:var(--orange)}
 
 /* ── Mobile (≤600px — iPhone Pro baseline) ──────────────────────────────── */
+/* Fixture tabs */
+.fixture-bar{display:flex;align-items:center;gap:0;padding:12px 18px 0;overflow-x:auto}
+.ftabs{display:flex;gap:3px;flex:1;overflow-x:auto;min-width:0}
+.ftab{font-family:var(--sans);font-size:.75rem;font-weight:600;padding:7px 16px;
+  border:1px solid var(--border);border-bottom:none;border-radius:var(--r) var(--r) 0 0;
+  background:var(--panel2);color:var(--dim);cursor:pointer;white-space:nowrap;
+  transition:background .13s,color .13s,border-color .13s;flex-shrink:0}
+.ftab:hover:not(.fa){color:var(--text);border-color:var(--border2)}
+.ftab.fa{background:var(--panel);color:var(--accent);border-color:var(--accent)}
+.ftab-add{font-size:1.1rem;line-height:1;width:30px;height:30px;flex-shrink:0;
+  border-radius:var(--rs);border:1px dashed var(--border2);background:transparent;
+  color:var(--dim);cursor:pointer;transition:border-color .13s,color .13s;margin-left:6px;
+  align-self:flex-end;margin-bottom:1px}
+.ftab-add:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.ftab-add:disabled{opacity:.3;cursor:default}
+/* Fixture settings list */
+.fxrow{display:flex;align-items:center;gap:6px;padding:3px 0}
+.fxrow-name{flex:1;min-width:0}
+.fxrow-addr-wrap{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.fxrow-addr{width:44px;text-transform:uppercase;font-family:var(--mono)}
+.fxrow-del{font-size:.72rem;padding:4px 9px;border-radius:4px;
+  background:var(--panel2);border:1px solid var(--border2);
+  color:var(--dim);cursor:pointer;flex-shrink:0;transition:border-color .12s,color .12s}
+.fxrow-del:hover{border-color:var(--orange);color:var(--orange)}
 @media(max-width:600px){
   /* Layout */
+  /* Fixture tabs */
+  .fixture-bar{padding:10px 12px 0}
+  .ftab{padding:6px 12px;font-size:.72rem}
   main{padding:12px 10px;gap:14px}
 
   /* Header */
@@ -402,6 +429,13 @@ details[open] .chev{transform:rotate(180deg)}
 </header>
 
 <main>
+
+<!-- Fixture Tabs -->
+<div class="fixture-bar">
+  <div class="ftabs" id="ftabs"></div>
+  <button class="ftab-add" id="ftab-add" onclick="fixtureAdd()" title="Add fixture">+</button>
+</div>
+
 
 <!-- Last TX -->
 <div class="last-bar">
@@ -629,6 +663,12 @@ details[open] .chev{transform:rotate(180deg)}
     <div class="card-body">
       <div class="settings-form">
 
+                <div class="cfg-section-hdr">Fixtures</div>
+        <div id="fixture-list"></div>
+        <div style="margin-top:5px">
+          <button class="btn btn-s btn-sm" id="fx-add-btn" onclick="fixtureAdd()">+ Add Fixture</button>
+        </div>
+
         <div class="cfg-section-hdr">Transmission</div>
         <div class="cfg-row">
           <span class="cfg-lbl">Burst repeat count</span>
@@ -655,13 +695,6 @@ details[open] .chev{transform:rotate(180deg)}
           <span class="cfg-lbl">Send time packet after burst</span>
           <label class="sw"><input type="checkbox" id="cfg-time" checked><span class="sw-tr"></span></label>
         </div>
-        <div class="cfg-row">
-          <span class="cfg-lbl">Device address</span>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-family:var(--mono);color:var(--dim);font-size:.8rem">0x</span>
-            <input type="text" class="cfg-inp" id="cfg-addr" maxlength="2" placeholder="D0" style="width:48px;text-transform:uppercase;font-family:var(--mono)">
-            <span class="pct">fixture must power-cycle to learn new address</span>
-          </div>
         </div>
 
         <div class="cfg-section-hdr">Display</div>
@@ -715,19 +748,6 @@ details[open] .chev{transform:rotate(180deg)}
   </details>
 </div>
 
-<!-- Known Packets -->
-<div class="card">
-  <details>
-    <summary>
-      <div class="card-hdr sum-row" style="border-bottom:none">
-        <span class="card-title">Known Packets</span>
-        <span class="chev">&#9660;</span>
-      </div>
-    </summary>
-    <div class="card-body" id="pkt-container"></div>
-  </details>
-</div>
-
 <!-- Packet Crafter -->
 <div class="card">
   <details>
@@ -760,23 +780,27 @@ details[open] .chev{transform:rotate(180deg)}
       <table class="api-tbl">
         <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
-          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/packets</td><td class="ad">All known packets as JSON.</td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/status</td><td class="ad">Last TX, current time, global toggle, battery level, firmware build.</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/index</td><td class="ad">Known packet by index. <code>{"index":0}</code></td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/log?since=N</td><td class="ad">Returns up to 40 TX log entries newer than sequence N. Each entry includes label + all packets sent (cmd, time, schedule).</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/fixtures</td><td class="ad">List all fixtures. Returns array of <code>{index, name, addr}</code>.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/channels?fixture=N</td><td class="ad">Current channel state for fixture N.</td></tr>
+          <tr><td><span class="m mG">GET</span></td><td class="ep">/api/schedule?fixture=N</td><td class="ad">Current schedule slots for fixture N.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Transmit channel state to fixture. <code>{"fixture":0,"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/raw</td><td class="ad">7-byte payload (CRC auto). <code>{"payload":"d0238a8a8601a6","send_time":true}</code></td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/send/channels</td><td class="ad">Channel state. <code>{"white_on":true,"white_level":10,"blue_on":true,"blue_level":10,"rgb_on":true,"rgb_color":8,"rgb_cycle":1,"rgb_level":10}</code><br>Levels 1–10 (10%–100%). rgb_color: 1=blue 2=green 3=white 4=red 5=orange 6=purple 7=pink 8=yellow 9=rainbow. rgb_cycle (rainbow only): 1=static, 2=3s, 4=4s, 8=5s.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/set</td><td class="ad">Set time. <code>{"hh":19,"mm":20,"ss":29}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/send</td><td class="ad">Transmit time packets immediately.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/time/ntp</td><td class="ad">Re-sync ESP clock from NTP. Returns <code>{"ok":true,"hh":…,"mm":…,"ss":…}</code></td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Set schedule slots.<br><code>{"off":[{"active":true,"hh":23,"mm":0},{"active":true,"hh":11,"mm":0},{"active":false,"hh":0,"mm":0}],"on":[{"active":true,"hh":11,"mm":0},{"active":true,"hh":23,"mm":0}]}</code><br>State byte for ON slots and type 07 auto-computed from current channel state.</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/set</td><td class="ad">Persist schedule slots for fixture. <code>{"fixture":0,"white_on":{…},"white_off":{…},"blue_on":{…},"blue_off":{…},"rgb_on":{…},"rgb_off":{…}}</code> — each slot: <code>{"active":true,"hh":23,"mm":0}</code>; rgb slots add <code>"state":N</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/schedule/send</td><td class="ad">Transmit all active schedule slots for fixture. <code>{"fixture":0}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/add</td><td class="ad">Add a new fixture (max 4).</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/remove</td><td class="ad">Remove fixture by index. <code>{"index":N}</code></td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/fixtures/update</td><td class="ad">Rename or change RF address. <code>{"index":N,"name":"…","addr":N}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/packet_gap</td><td class="ad">Set inter-packet gap (0–9999 µs). <code>{"gap_us":0}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/burst_gap</td><td class="ad">Set inter-burst gap (0–1000 ms). <code>{"gap_ms":1}</code></td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_us</code>, <code>burst_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>, <code>device_addr</code> (1–255; fixture must power-cycle to learn). Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_us</code>, <code>burst_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
         </tbody>
       </table>
@@ -868,6 +892,7 @@ async function sendChannels(){
     CH.rgb.cycle=1;
   }
   const r=await api('/api/send/channels','POST',{
+    fixture:activeFix,
     white_on:CH.white.on,white_level:CH.white.level,
     blue_on:CH.blue.on,blue_level:CH.blue.level,
     rgb_on:CH.rgb.on,rgb_color:CH.rgb.color,rgb_cycle:CH.rgb.cycle,rgb_level:CH.rgb.level
@@ -1008,42 +1033,11 @@ function readSched() {
 }
 
 async function sendSchedule(){
-  const r = await api('/api/schedule/set','POST', readSched());
+  const sched = readSched(); sched.fixture = activeFix;
+  const r = await api('/api/schedule/set','POST', sched);
   if(!r.ok){toast('✗ set failed',true);return;}
-  const r2 = await api('/api/schedule/send','POST',{});
+  const r2 = await api('/api/schedule/send','POST',{fixture: activeFix});
   r2.ok?toast('✓ schedule sent'):toast('✗ '+(r2.error||'error'),true);
-}
-
-// ── Known packets grid ──
-async function loadPackets(){
-  const pkts=await api('/api/packets');
-  if(!Array.isArray(pkts))return;
-  const groups=['Power','Dim','Channel','Schedule','Time'];
-  const byGroup={};
-  pkts.forEach(p=>(byGroup[p.group]=byGroup[p.group]||[]).push(p));
-  const cont=document.getElementById('pkt-container');
-  groups.forEach(g=>{
-    if(!byGroup[g])return;
-    const wrap=document.createElement('div');
-    wrap.style.marginBottom='15px';
-    const lbl=document.createElement('div');lbl.className='grp-lbl';lbl.textContent=g;
-    const grid=document.createElement('div');grid.className='pkt-grid-wrap g'+g;
-    byGroup[g].forEach(p=>{
-      const btn=document.createElement('button');btn.className='pkt-btn';
-      btn.textContent=p.label;
-      if(p.send_time){const s=document.createElement('span');s.className='tbadge';s.textContent='+T';btn.appendChild(s);}
-      btn.onclick=()=>sendIndex(p.index,btn);
-      grid.appendChild(btn);
-    });
-    wrap.appendChild(lbl);wrap.appendChild(grid);cont.appendChild(wrap);
-  });
-}
-async function sendIndex(idx,btn){
-  btn&&btn.classList.add('firing');
-  const r=await api('/api/send/index','POST',{index:idx});
-  if(r.ok){toast('✓ '+r.label);updLastBar(r.label,r.hex);}
-  else toast('✗ '+(r.error||'error'),true);
-  setTimeout(()=>btn&&btn.classList.remove('firing'),500);
 }
 
 // ── Packet crafter ──
@@ -1143,7 +1137,6 @@ poll();setInterval(poll,10000);
 
 // Init
 updateRgbDurationRow();
-loadPackets();
 
 // ── TX Terminal ──
 let logSince = 0;
@@ -1232,12 +1225,13 @@ function clearLog() {
 
 // ── On-load: populate UI from device state ──
 async function loadDeviceState() {
+  await loadFixtures();
   try {
     const s = await api('/api/status','GET');
     if(s.time) applyEspTime(s.time.hh,s.time.mm,s.time.ss);
   } catch(e){}
   try {
-    const ch = await api('/api/channels','GET');
+    const ch = await api('/api/channels?fixture='+activeFix,'GET');
     CH.white.on=ch.white_on; setCh('white',ch.white_on);
     CH.white.level=ch.white_level;
     document.getElementById('sl-white').value=ch.white_level;
@@ -1259,7 +1253,7 @@ async function loadDeviceState() {
     updateRgbDurationRow();
   } catch(e){}
   try {
-    const sc = await api('/api/schedule','GET');
+    const sc = await api('/api/schedule?fixture='+activeFix,'GET');
     function fillSlot(pfx, slot) {
       document.getElementById(pfx+'-hh').value = String(slot.hh).padStart(2,'0');
       document.getElementById(pfx+'-mm').value = String(slot.mm).padStart(2,'0');
@@ -1288,11 +1282,118 @@ async function loadDeviceState() {
     }
   } catch(e){}
 }
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+let fixtureData = [];
+let activeFix = 0;
+
+async function loadFixtures() {
+  try {
+    const fs = await api('/api/fixtures','GET');
+    if (!Array.isArray(fs)) return;
+    fixtureData = fs;
+    if (activeFix >= fixtureData.length) activeFix = 0;
+    renderFixtureTabs();
+    renderFixtureSettings();
+  } catch(e) {}
+}
+
+function renderFixtureTabs() {
+  const tabs = document.getElementById('ftabs');
+  if (!tabs) return;
+  tabs.innerHTML = '';
+  fixtureData.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'ftab' + (f.index === activeFix ? ' fa' : '');
+    btn.textContent = f.name;
+    btn.title = '0x' + f.addr.toString(16).toUpperCase().padStart(2,'0');
+    btn.onclick = () => fixtureSelect(f.index);
+    tabs.appendChild(btn);
+  });
+  const maxed = fixtureData.length >= 4;
+  const addBtn = document.getElementById('ftab-add');
+  if (addBtn) addBtn.disabled = maxed;
+  const addBtn2 = document.getElementById('fx-add-btn');
+  if (addBtn2) addBtn2.disabled = maxed;
+}
+
+function renderFixtureSettings() {
+  const list = document.getElementById('fixture-list');
+  if (!list) return;
+  list.innerHTML = '';
+  fixtureData.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'fxrow';
+    const nameId = 'fx-name-' + f.index;
+    const addrId = 'fx-addr-' + f.index;
+    const addrHex = f.addr.toString(16).toUpperCase().padStart(2, '0');
+    const delBtn = fixtureData.length > 1
+      ? `<button class="fxrow-del" onclick="fixtureRemove(${f.index})" title="Remove fixture">✕</button>`
+      : '';
+    row.innerHTML =
+      `<input type="text" class="cfg-inp fxrow-name" id="${nameId}" maxlength="16" value="" placeholder="Fixture ${f.index+1}">` +
+      `<div class="fxrow-addr-wrap"><span style="font-family:var(--mono);color:var(--dim);font-size:.8rem">0x</span>` +
+      `<input type="text" class="cfg-inp fxrow-addr" id="${addrId}" maxlength="2" value="">` +
+      `</div>` + delBtn;
+    list.appendChild(row);
+    const ni = document.getElementById(nameId);
+    const ai = document.getElementById(addrId);
+    if (ni) { ni.value = f.name; ni.addEventListener('blur', () => fixtureUpdate(f.index)); }
+    if (ai) { ai.value = addrHex; ai.addEventListener('blur', () => fixtureUpdate(f.index)); }
+  });
+}
+
+async function fixtureSelect(idx) {
+  if (idx === activeFix) return;
+  activeFix = idx;
+  renderFixtureTabs();
+  await loadDeviceState();
+  const f = fixtureData.find(f => f.index === idx);
+  if (f) toast('✓ ' + f.name);
+}
+
+async function fixtureAdd() {
+  const r = await api('/api/fixtures/add','POST',{});
+  if (!r.ok) { toast('✗ ' + (r.error || 'add failed'), true); return; }
+  await loadFixtures();
+  toast('✓ fixture added');
+}
+
+async function fixtureRemove(idx) {
+  const f = fixtureData.find(f => f.index === idx);
+  if (!confirm('Remove ' + (f ? f.name : 'fixture') + '? Its settings will be lost.')) return;
+  const r = await api('/api/fixtures/remove','POST',{index: idx});
+  if (!r.ok) { toast('✗ ' + (r.error || 'remove failed'), true); return; }
+  if (activeFix >= fixtureData.length - 1) activeFix = Math.max(0, fixtureData.length - 2);
+  await loadFixtures();
+}
+
+async function fixtureUpdate(idx) {
+  const ni = document.getElementById('fx-name-' + idx);
+  const ai = document.getElementById('fx-addr-' + idx);
+  if (!ni || !ai) return;
+  const name = ni.value.trim() || ('Fixture ' + (idx + 1));
+  const addrVal = parseInt(ai.value, 16);
+  if (isNaN(addrVal) || addrVal < 1 || addrVal > 255) { toast('✗ invalid address', true); return; }
+  const r = await api('/api/fixtures/update','POST',{index: idx, name, addr: addrVal});
+  if (r.ok) {
+    const f = fixtureData.find(f => f.index === idx);
+    if (f) { f.name = name; f.addr = addrVal; }
+    renderFixtureTabs();
+    ni.value = name;
+    ai.value = addrVal.toString(16).toUpperCase().padStart(2,'0');
+    toast('✓ saved');
+  } else {
+    toast('✗ ' + (r.error || 'update failed'), true);
+  }
+}
+
+
 // ── Device Settings ──────────────────────────────────────────────────────────
 document.getElementById('d-devset').addEventListener('toggle', function(){
   if (this.open) cfgLoad();
 });
 async function cfgLoad() {
+  renderFixtureSettings();
   try {
     const s = await api('/api/settings/device','GET');
     if (s.repeat_count != null)      document.getElementById('cfg-repeat').value  = s.repeat_count;
@@ -1306,7 +1407,6 @@ async function cfgLoad() {
     }
     if (s.hostname)    document.getElementById('cfg-host').value = s.hostname;
     if (s.wifi_ssid)   document.getElementById('cfg-ssid').value = s.wifi_ssid;
-    if (s.device_addr != null) document.getElementById('cfg-addr').value = s.device_addr.toString(16).toUpperCase().padStart(2,'0');
     if (s.tz_offset_sec != null)
       document.getElementById('cfg-tz').value = (s.tz_offset_sec / 3600).toFixed(1).replace(/\.0$/,'');
   } catch(e) {}
@@ -1321,8 +1421,6 @@ function cfgTogglePass() {
   btn.textContent = inp.type === 'password' ? 'show' : 'hide';
 }
 async function cfgSave() {
-  const addrHex = document.getElementById('cfg-addr').value.trim();
-  const addrVal = addrHex ? parseInt(addrHex, 16) : NaN;
   const body = {
     repeat_count:      parseInt(document.getElementById('cfg-repeat').value),
     packet_gap_us:     parseInt(document.getElementById('cfg-pgap').value),
@@ -1334,7 +1432,6 @@ async function cfgSave() {
     wifi_ssid:         document.getElementById('cfg-ssid').value.trim(),
     tz_offset_sec:     Math.round(parseFloat(document.getElementById('cfg-tz').value) * 3600)
   };
-  if (!isNaN(addrVal) && addrVal >= 1 && addrVal <= 255) body.device_addr = addrVal;
   const pw = document.getElementById('cfg-pass').value;
   if (pw) body.wifi_pass = pw;
   const r = await api('/api/settings/device','POST', body);

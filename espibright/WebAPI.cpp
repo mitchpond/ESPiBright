@@ -1,41 +1,11 @@
 #include "WebAPI.h"
 #include <ESPmDNS.h>
 #include <M5Unified.h>
+#include <esp_random.h>
 #include "config.h"
 #include "html.h"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-void WebAPI::buildKnownPackets_() {
-    const uint8_t* t = rf_.crcTable();
-    struct Init { const char* label; const char* group; uint8_t p[7]; bool st; };
-    static const Init inits[] = {
-        {"ALL ON",         "Power",    {0xd0,0x23,0x8a,0x8a,0x86,0x01,0xa6}, true },
-        {"ALL OFF",        "Power",    {0xd0,0x23,0x0a,0x0a,0x06,0x00,0xa6}, true },
-        {"DIM 10%",        "Dim",      {0xd0,0x23,0x81,0x81,0x06,0x01,0x16}, true },
-        {"DIM 50%",        "Dim",      {0xd0,0x23,0x85,0x85,0x06,0x01,0x56}, true },
-        {"DIM 75%",        "Dim",      {0xd0,0x23,0x87,0x87,0x06,0x01,0x76}, true },
-        {"DIM 100%",       "Dim",      {0xd0,0x23,0x8a,0x8a,0x86,0x01,0xa6}, true },
-        {"WHITE ONLY 100", "Channel",  {0xd0,0x23,0x8a,0x0a,0x06,0x01,0xa6}, true },
-        {"WHITE ONLY 50",  "Channel",  {0xd0,0x23,0x85,0x05,0x06,0x01,0x56}, true },
-        {"BLUE ONLY 100",  "Channel",  {0xd0,0x23,0x0a,0x8a,0x06,0x01,0xa6}, true },
-        {"BLUE ONLY 50",   "Channel",  {0xd0,0x23,0x05,0x85,0x06,0x01,0x56}, true },
-        {"SCHED TYPE 03",  "Schedule", {0xd0,0x23,0x17,0x00,0x00,0x00,0x03}, false},
-        {"SCHED TYPE 08",  "Schedule", {0xd0,0x23,0x0b,0x00,0x86,0x00,0x08}, false},
-        {"TIME HMS",       "Time",     {0xd0,0x23,0x13,0x14,0x1d,0x00,0x01}, false},
-    };
-    numKnownPkts_ = sizeof(inits) / sizeof(inits[0]);
-    for (int i = 0; i < numKnownPkts_; i++) {
-        knownPkts_[i].label    = inits[i].label;
-        knownPkts_[i].group    = inits[i].group;
-        knownPkts_[i].sendTime = inits[i].st;
-        uint8_t p7[7];
-        memcpy(p7, inits[i].p, 7);
-        p7[0] = rf_.deviceAddr();  // substitute live device address
-        memcpy(knownPkts_[i].payload, p7, 7);
-        Protocol::buildPacket(t, p7, knownPkts_[i].pkt);
-    }
-}
 
 String WebAPI::pktHex_(const uint8_t* p) const {
     char b[17];
@@ -54,28 +24,15 @@ bool WebAPI::parseBody_(JsonDocument& doc) {
     return server_.hasArg("plain") && !deserializeJson(doc, server_.arg("plain"));
 }
 
-// Build one JSON object for a known packet entry
-String WebAPI::pktJson_(int i) const {
-    return String("{\"index\":") + i
-         + ",\"label\":\"" + knownPkts_[i].label + "\""
-         + ",\"group\":\"" + knownPkts_[i].group + "\""
-         + ",\"hex\":\""   + pktHex_(knownPkts_[i].pkt) + "\""
-         + ",\"send_time\":" + (knownPkts_[i].sendTime ? "true" : "false")
-         + "}";
-}
-
 // ── Registration ──────────────────────────────────────────────────────────────
 
 void WebAPI::begin() {
-    buildKnownPackets_();
-
     server_.on("/",                        HTTP_GET,  [this](){ handleRoot_(); });
-    server_.on("/api/packets",             HTTP_GET,  [this](){ handleApiPackets_(); });
     server_.on("/api/status",              HTTP_GET,  [this](){ handleApiStatus_(); });
     server_.on("/api/channels",            HTTP_GET,  [this](){ handleApiChannels_(); });
     server_.on("/api/schedule",            HTTP_GET,  [this](){ handleApiSchedule_(); });
     server_.on("/api/log",                 HTTP_GET,  [this](){ handleApiLog_(); });
-    server_.on("/api/send/index",          HTTP_POST, [this](){ handleSendIndex_(); });
+    server_.on("/api/fixtures",            HTTP_GET,  [this](){ handleFixturesList_(); });
     server_.on("/api/send/raw",            HTTP_POST, [this](){ handleSendRaw_(); });
     server_.on("/api/send/channels",       HTTP_POST, [this](){ handleSendChannels_(); });
     server_.on("/api/time/set",            HTTP_POST, [this](){ handleTimeSet_(); });
@@ -83,6 +40,9 @@ void WebAPI::begin() {
     server_.on("/api/time/ntp",            HTTP_POST, [this](){ handleTimeNtp_(); });
     server_.on("/api/schedule/set",        HTTP_POST, [this](){ handleScheduleSet_(); });
     server_.on("/api/schedule/send",       HTTP_POST, [this](){ handleScheduleSend_(); });
+    server_.on("/api/fixtures/add",        HTTP_POST, [this](){ handleFixturesAdd_(); });
+    server_.on("/api/fixtures/remove",     HTTP_POST, [this](){ handleFixturesRemove_(); });
+    server_.on("/api/fixtures/update",     HTTP_POST, [this](){ handleFixturesUpdate_(); });
     server_.on("/api/settings/time_global",HTTP_POST, [this](){ handleTimeGlobal_(); });
     server_.on("/api/settings/repeat",     HTTP_POST, [this](){ handleRepeatSet_(); });
     server_.on("/api/settings/packet_gap", HTTP_POST, [this](){ handlePacketGapSet_(); });
@@ -95,9 +55,10 @@ void WebAPI::begin() {
     });
 
     const char* corsPaths[] = {
-        "/api/send/index", "/api/send/raw", "/api/send/channels",
+        "/api/send/raw", "/api/send/channels",
         "/api/time/set", "/api/time/send", "/api/time/ntp",
         "/api/schedule/set", "/api/schedule/send",
+        "/api/fixtures/add", "/api/fixtures/remove", "/api/fixtures/update",
         "/api/settings/time_global", "/api/settings/repeat",
         "/api/settings/packet_gap", "/api/settings/burst_gap",
         "/api/settings/device", "/api/reboot"
@@ -115,17 +76,6 @@ void WebAPI::handleRoot_() {
     server_.setContentLength(sizeof(HTML) - 1);
     server_.send(200, "text/html", "");
     server_.sendContent_P(HTML, sizeof(HTML) - 1);
-}
-
-void WebAPI::handleApiPackets_() {
-    sendCors_();
-    String j = "[";
-    for (int i = 0; i < numKnownPkts_; i++) {
-        if (i > 0) j += ",";
-        j += pktJson_(i);
-    }
-    j += "]";
-    server_.send(200, "application/json", j);
 }
 
 void WebAPI::handleApiStatus_() {
@@ -148,24 +98,26 @@ void WebAPI::handleApiStatus_() {
 
 void WebAPI::handleApiChannels_() {
     sendCors_();
-    String j = String("{\"white_on\":") + (ch_.whiteOn ? "true" : "false")
-             + ",\"white_level\":" + ch_.whiteLevel
-             + ",\"blue_on\":"     + (ch_.blueOn ? "true" : "false")
-             + ",\"blue_level\":"  + ch_.blueLevel
-             + ",\"rgb_on\":"      + (ch_.rgbOn ? "true" : "false")
-             + ",\"rgb_color\":"   + ch_.rgbColor
-             + ",\"rgb_cycle\":"   + ch_.rgbCycle
-             + ",\"rgb_level\":"   + ch_.rgbLevel
+    int fix = server_.hasArg("fixture") ? server_.arg("fixture").toInt() : 0;
+    if (fix < 0 || fix >= store_.settings.fixtureCount) fix = 0;
+    ChannelState ch(rf_);
+    store_.loadFixtureChannels(fix, ch);
+    String j = String("{\"white_on\":") + (ch.whiteOn ? "true" : "false")
+             + ",\"white_level\":" + ch.whiteLevel
+             + ",\"blue_on\":"     + (ch.blueOn ? "true" : "false")
+             + ",\"blue_level\":"  + ch.blueLevel
+             + ",\"rgb_on\":"      + (ch.rgbOn ? "true" : "false")
+             + ",\"rgb_color\":"   + ch.rgbColor
+             + ",\"rgb_cycle\":"   + ch.rgbCycle
+             + ",\"rgb_level\":"   + ch.rgbLevel
              + "}";
     server_.send(200, "application/json", j);
 }
 
-// Serialize a plain schedule slot to a JSON key:object pair.
 static String schedSlotJson(const char* key, const SchedSlot& s) {
     return String("\"") + key + "\":{\"active\":" + (s.active ? "true" : "false")
          + ",\"hh\":" + s.hh + ",\"mm\":" + s.mm + "}";
 }
-// Serialize an RGB schedule slot (includes frozen state byte) to a JSON key:object pair.
 static String schedRgbSlotJson(const char* key, const SchedRgbSlot& s) {
     return String("\"") + key + "\":{\"active\":" + (s.active ? "true" : "false")
          + ",\"hh\":" + s.hh + ",\"mm\":" + s.mm + ",\"state\":" + s.state + "}";
@@ -173,13 +125,17 @@ static String schedRgbSlotJson(const char* key, const SchedRgbSlot& s) {
 
 void WebAPI::handleApiSchedule_() {
     sendCors_();
+    int fix = server_.hasArg("fixture") ? server_.arg("fixture").toInt() : 0;
+    if (fix < 0 || fix >= store_.settings.fixtureCount) fix = 0;
+    ScheduleState sched(rf_);
+    store_.loadFixtureSchedule(fix, sched);
     String j = String("{")
-             + schedSlotJson("white_on",  sched_.whiteOn)  + ","
-             + schedSlotJson("white_off", sched_.whiteOff) + ","
-             + schedSlotJson("blue_on",   sched_.blueOn)   + ","
-             + schedSlotJson("blue_off",  sched_.blueOff)  + ","
-             + schedRgbSlotJson("rgb_on",  sched_.rgbOn)   + ","
-             + schedRgbSlotJson("rgb_off", sched_.rgbOff)
+             + schedSlotJson("white_on",  sched.whiteOn)  + ","
+             + schedSlotJson("white_off", sched.whiteOff) + ","
+             + schedSlotJson("blue_on",   sched.blueOn)   + ","
+             + schedSlotJson("blue_off",  sched.blueOff)  + ","
+             + schedRgbSlotJson("rgb_on",  sched.rgbOn)   + ","
+             + schedRgbSlotJson("rgb_off", sched.rgbOff)
              + "}";
     server_.send(200, "application/json", j);
 }
@@ -217,25 +173,92 @@ void WebAPI::handleApiLog_() {
     server_.send(200, "application/json", j);
 }
 
-// ── POST handlers ─────────────────────────────────────────────────────────────
-
+// ── Shared response constants ─────────────────────────────────────────────────
 static const char JSON_OK[]       = "{\"ok\":true}";
 static const char JSON_BAD_BODY[] = "{\"ok\":false,\"error\":\"bad body\"}";
 
-void WebAPI::handleSendIndex_() {
+// ── Fixture handlers ──────────────────────────────────────────────────────────
+
+void WebAPI::handleFixturesList_() {
+    sendCors_();
+    String j = "[";
+    for (int i = 0; i < store_.settings.fixtureCount; i++) {
+        if (i > 0) j += ",";
+        j += String("{\"index\":") + i
+           + ",\"name\":\""  + store_.fixtures[i].name + "\""
+           + ",\"addr\":"    + store_.fixtures[i].addr
+           + "}";
+    }
+    j += "]";
+    server_.send(200, "application/json", j);
+}
+
+
+void WebAPI::handleFixturesAdd_() {
+    sendCors_();
+    if (store_.settings.fixtureCount >= Storage::MAX_FIXTURES) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"max fixtures reached\"}");
+        return;
+    }
+    int newIdx = store_.settings.fixtureCount;
+    snprintf(store_.fixtures[newIdx].name, sizeof(store_.fixtures[newIdx].name),
+             "Fixture %d", newIdx + 1);
+    uint8_t addr = (uint8_t)(esp_random() & 0xFF);
+    if (!addr) addr = 0xA0;
+    store_.fixtures[newIdx].addr = addr;
+    store_.settings.fixtureCount++;
+    store_.saveFixtureSettings(newIdx, store_.fixtures[newIdx]);
+    store_.saveSettings();
+    server_.send(200, "application/json", JSON_OK);
+}
+
+void WebAPI::handleFixturesRemove_() {
     sendCors_();
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
     int idx = doc["index"] | -1;
-    if (idx < 0 || idx >= numKnownPkts_) {
-        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"index out of range\"}");
+    int cnt = store_.settings.fixtureCount;
+    if (idx < 0 || idx >= cnt || cnt <= 1) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"invalid\"}");
         return;
     }
-    rf_.sendPkt(knownPkts_[idx].pkt, knownPkts_[idx].sendTime, knownPkts_[idx].label);
-    String r = String("{\"ok\":true,\"label\":\"") + knownPkts_[idx].label
-             + "\",\"hex\":\"" + pktHex_(knownPkts_[idx].pkt) + "\"}";
-    server_.send(200, "application/json", r);
+    // Shift fixtures array down
+    for (int i = idx; i < cnt - 1; i++)
+        store_.fixtures[i] = store_.fixtures[i + 1];
+    store_.settings.fixtureCount--;
+    store_.saveFixtures();
+    store_.saveSettings();
+    // Reload display state from fixture 0 (safe fallback)
+    store_.loadFixtureData(0, ch_, sched_);
+    rf_.setDeviceAddr(store_.fixtures[0].addr);
+    display_.markDirty();
+    server_.send(200, "application/json", JSON_OK);
 }
+
+void WebAPI::handleFixturesUpdate_() {
+    sendCors_();
+    JsonDocument doc;
+    if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+    int idx = doc["index"] | -1;
+    if (idx < 0 || idx >= store_.settings.fixtureCount) {
+        server_.send(400, "application/json", "{\"ok\":false,\"error\":\"invalid index\"}");
+        return;
+    }
+    if (!doc["name"].isNull()) {
+        const char* n = doc["name"].as<const char*>();
+        strncpy(store_.fixtures[idx].name, n, sizeof(store_.fixtures[idx].name) - 1);
+        store_.fixtures[idx].name[sizeof(store_.fixtures[idx].name) - 1] = '\0';
+    }
+    if (!doc["addr"].isNull()) {
+        int a = doc["addr"].as<int>();
+        if (a >= 1 && a <= 255)
+            store_.fixtures[idx].addr = (uint8_t)a;
+    }
+    store_.saveFixtureSettings(idx, store_.fixtures[idx]);
+    server_.send(200, "application/json", JSON_OK);
+}
+
+// ── POST handlers ─────────────────────────────────────────────────────────────
 
 void WebAPI::handleSendRaw_() {
     sendCors_();
@@ -263,6 +286,11 @@ void WebAPI::handleSendChannels_() {
     sendCors_();
     JsonDocument doc;
     if (!parseBody_(doc)) { server_.send(400, "application/json", JSON_BAD_BODY); return; }
+    int fix = doc["fixture"] | 0;
+    if (fix < 0 || fix >= store_.settings.fixtureCount) fix = 0;
+    // Load fixture's persisted state, apply request overrides, send, save back
+    store_.loadFixtureData(fix, ch_, sched_);
+    rf_.setDeviceAddr(store_.fixtures[fix].addr);
     ch_.whiteOn    = doc["white_on"]    | ch_.whiteOn;
     ch_.whiteLevel = doc["white_level"] | ch_.whiteLevel;
     ch_.blueOn     = doc["blue_on"]     | ch_.blueOn;
@@ -272,7 +300,8 @@ void WebAPI::handleSendChannels_() {
     ch_.rgbCycle   = doc["rgb_cycle"]   | ch_.rgbCycle;
     ch_.rgbLevel   = doc["rgb_level"]   | ch_.rgbLevel;
     ch_.send();
-    store_.saveChannels(ch_);
+    store_.saveFixtureChannels(fix, ch_);
+    display_.markDirty();
     String r = String("{\"ok\":true,\"label\":\"") + rf_.lastLabel()
              + "\",\"hex\":\"" + rf_.lastHex() + "\"}";
     server_.send(200, "application/json", r);
@@ -326,19 +355,30 @@ void WebAPI::handleScheduleSet_() {
         s.state  = o["state"]  | s.state;
     };
 
-    readSlot("white_on",  sched_.whiteOn);
-    readSlot("white_off", sched_.whiteOff);
-    readSlot("blue_on",   sched_.blueOn);
-    readSlot("blue_off",  sched_.blueOff);
-    readRgb ("rgb_on",    sched_.rgbOn);
-    readRgb ("rgb_off",   sched_.rgbOff);
-    store_.saveSchedule(sched_);
+    int fix = doc["fixture"] | 0;
+    if (fix < 0 || fix >= store_.settings.fixtureCount) fix = 0;
+    // Load into a temp; don't disturb the display's sched_
+    ScheduleState tmp(rf_);
+    store_.loadFixtureSchedule(fix, tmp);
+    auto& s = tmp;
+    readSlot("white_on",  s.whiteOn);
+    readSlot("white_off", s.whiteOff);
+    readSlot("blue_on",   s.blueOn);
+    readSlot("blue_off",  s.blueOff);
+    readRgb ("rgb_on",    s.rgbOn);
+    readRgb ("rgb_off",   s.rgbOff);
+    store_.saveFixtureSchedule(fix, tmp);
     server_.send(200, "application/json", JSON_OK);
 }
 
 void WebAPI::handleScheduleSend_() {
     sendCors_();
-    // Send current time first so the fixture clock is in sync before applying the schedule.
+    JsonDocument doc;
+    int fix = (parseBody_(doc)) ? (doc["fixture"] | 0) : 0;
+    if (fix < 0 || fix >= store_.settings.fixtureCount) fix = 0;
+    store_.loadFixtureData(fix, ch_, sched_);
+    rf_.setDeviceAddr(store_.fixtures[fix].addr);
+    display_.markDirty();
     clock_.send("TIME SEND");
     sched_.send();
     server_.send(200, "application/json", JSON_OK);
@@ -368,7 +408,6 @@ void WebAPI::handleRepeatSet_() {
     store_.saveSettings();
     server_.send(200, "application/json", JSON_OK);
 }
-
 
 void WebAPI::handlePacketGapSet_() {
     sendCors_();
@@ -402,8 +441,6 @@ void WebAPI::handleBurstGapSet_() {
 
 void WebAPI::handleSettingsDevGet_() {
     sendCors_();
-    char addrHex[5];
-    snprintf(addrHex, sizeof(addrHex), "0x%02X", rf_.deviceAddr());
     String j = String("{\"repeat_count\":")      + rf_.repeatCount()
              + ",\"packet_gap_us\":"             + rf_.packetGapUs()
              + ",\"burst_gap_ms\":"              + rf_.burstGapMs()
@@ -414,7 +451,6 @@ void WebAPI::handleSettingsDevGet_() {
              + ",\"wifi_ssid\":\""              + String(store_.settings.wifiSsid) + "\""
              + ",\"wifi_pass\":\"***\""
              + ",\"tz_offset_sec\":"             + store_.settings.tzOffsetSec
-             + ",\"device_addr\":"               + rf_.deviceAddr()
              + "}";
     server_.send(200, "application/json", j);
 }
@@ -474,14 +510,6 @@ void WebAPI::handleSettingsDevPost_() {
     if (!doc["tz_offset_sec"].isNull()) {
         store_.settings.tzOffsetSec = doc["tz_offset_sec"].as<int32_t>();
         rebootRequired = true;
-    }
-    if (!doc["device_addr"].isNull()) {
-        int a = doc["device_addr"].as<int>();
-        if (a >= 1 && a <= 255) {
-            store_.settings.deviceAddr = (uint8_t)a;
-            rf_.setDeviceAddr((uint8_t)a);
-            buildKnownPackets_();  // rebuild with new address
-        }
     }
 
     store_.saveSettings();

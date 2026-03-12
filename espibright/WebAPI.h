@@ -10,15 +10,6 @@
 #include "Storage.h"
 #include "TxLog.h"
 
-// ── Known packet table ────────────────────────────────────────────────────────
-struct KnownPacket {
-    const char* label;
-    const char* group;
-    uint8_t     payload[7];
-    uint8_t     pkt[8];
-    bool        sendTime;
-};
-
 // ── WebAPI ────────────────────────────────────────────────────────────────────
 // Owns the WebServer and all HTTP route handlers.
 // Call begin() after WiFi is up to register routes and start the server.
@@ -45,23 +36,16 @@ private:
     Display&       display_;
     WebServer      server_;
 
-    KnownPacket knownPkts_[14];
-    int         numKnownPkts_ = 0;
-
-    void buildKnownPackets_();
     String pktHex_(const uint8_t* p) const;
-    String pktJson_(int i) const;
     void   sendCors_();
     bool   parseBody_(JsonDocument& doc);
 
     // Route handlers
     void handleRoot_();
-    void handleApiPackets_();
     void handleApiStatus_();
     void handleApiChannels_();
     void handleApiSchedule_();
     void handleApiLog_();
-    void handleSendIndex_();
     void handleSendRaw_();
     void handleSendChannels_();
     void handleTimeSet_();
@@ -77,4 +61,10 @@ private:
     void handleSettingsDevPost_();
     void handleReboot_();
     void handleOptions_();
+
+    // Fixture management
+    void handleFixturesList_();
+    void handleFixturesAdd_();
+    void handleFixturesRemove_();
+    void handleFixturesUpdate_();
 };
