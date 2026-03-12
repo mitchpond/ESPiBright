@@ -85,7 +85,7 @@ void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label)
     if (withTime && timeEnabled_ && getTime) {
         uint8_t hh, mm, ss;
         getTime(hh, mm, ss);
-        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
+        uint8_t p7[7] = {addr0_, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
         uint8_t tail[8];
         buildPacket(p7, tail);
         addToTail(tail, "HMS");
@@ -94,7 +94,7 @@ void RFTransmitter::sendPkt(const uint8_t* p8, bool withTime, const char* label)
 }
 
 void RFTransmitter::sendTimePackets(uint8_t hh, uint8_t mm, uint8_t ss, const char* label) {
-    uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
+    uint8_t p7[7] = {addr0_, PROTO_ADDR1, hh, mm, ss, 0x00, 0x01};
     uint8_t pkt[8];
     buildPacket(p7, pkt);
     clearBuf();

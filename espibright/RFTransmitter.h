@@ -59,13 +59,15 @@ public:
 
     // ── Configurable TX settings ──────────────────────────────────────────────
     // Setters enforce valid ranges; callers do not need to pre-validate.
-    void setTimeEnabled(bool en) { timeEnabled_  = en; }
-    void setRepeatCount(int n)   { repeatCount_  = constrain(n,  1,   20); }
-    void setPacketGapMs(int ms)  { packetGapMs_  = constrain(ms, 0, 1000); }
+    void setTimeEnabled(bool en)    { timeEnabled_  = en; }
+    void setRepeatCount(int n)      { repeatCount_  = constrain(n,  1,   20); }
+    void setPacketGapMs(int ms)     { packetGapMs_  = constrain(ms, 0, 1000); }
+    void setDeviceAddr(uint8_t a)   { addr0_ = a ? a : PROTO_ADDR0; }
 
-    bool timeEnabled()  const { return timeEnabled_; }
-    int  repeatCount()  const { return repeatCount_; }
-    int  packetGapMs()  const { return packetGapMs_; }
+    bool    timeEnabled()  const { return timeEnabled_; }
+    int     repeatCount()  const { return repeatCount_; }
+    int     packetGapMs()  const { return packetGapMs_; }
+    uint8_t deviceAddr()   const { return addr0_; }
 
     // ── Last TX metadata (read-only; written by recordTx_) ────────────────────
     const char*   lastLabel() const { return lastLabel_; }
@@ -83,6 +85,7 @@ private:
     bool          timeEnabled_  = true;
     int           repeatCount_  = TX_REPEAT;
     int           packetGapMs_  = TX_PACKET_GAP_MS;
+    uint8_t       addr0_        = PROTO_ADDR0;
     char          lastLabel_[48] = "none";
     char          lastHex_[20]   = "--";
     unsigned long lastMs_        = 0;

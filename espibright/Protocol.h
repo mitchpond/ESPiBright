@@ -5,10 +5,12 @@
 // ── Protocol ──────────────────────────────────────────────────────────────────
 // Stateless packet building for the OptiBright RF protocol.
 // All packets are 8 bytes: 7-byte payload + 1-byte CRC.
-// Bytes 0-1 are always 0xD0 0x23 (device address).
+// Bytes 0-1 are the device address (ADDR 0x23).
+// byte[0] is randomly generated per-device on first boot (stored in NVS).
+// byte[1] is always 0x23 in all observed captures.
 //
 // Packet field layout:
-//   [0]    = 0xD0
+//   [0]    = ADDR  (per-device; see RFTransmitter::deviceAddr())
 //   [1]    = 0x23
 //   [2] B3 = channel/state data
 //   [3] B4 = channel/state data
@@ -55,18 +57,20 @@ namespace Protocol {
 
     // Build a channel command packet (TYPE 0x06).
     // typeByte = (dominant_level << 4) | 0x06
-    inline void buildChannelPacket(const uint8_t* table,
+    // addr0: per-device address byte (from RFTransmitter::deviceAddr())
+    inline void buildChannelPacket(const uint8_t* table, uint8_t addr0,
                                    uint8_t b3, uint8_t b4, uint8_t b5,
                                    uint8_t b6, uint8_t typeByte, uint8_t* out8) {
-        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, b3, b4, b5, b6, typeByte};
+        uint8_t p7[7] = {addr0, PROTO_ADDR1, b3, b4, b5, b6, typeByte};
         buildPacket(table, p7, out8);
     }
 
     // Convenience: build a schedule slot packet
-    inline void buildSchedPacket(const uint8_t* table,
+    // addr0: per-device address byte (from RFTransmitter::deviceAddr())
+    inline void buildSchedPacket(const uint8_t* table, uint8_t addr0,
                                  uint8_t hh, uint8_t mm, uint8_t b5,
                                  uint8_t type, uint8_t* out8) {
-        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, hh, mm, b5, 0x00, type};
+        uint8_t p7[7] = {addr0, PROTO_ADDR1, hh, mm, b5, 0x00, type};
         buildPacket(table, p7, out8);
     }
 

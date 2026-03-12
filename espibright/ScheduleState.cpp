@@ -1,14 +1,14 @@
 #include "ScheduleState.h"
 
 void ScheduleState::buildSlotPkt_(uint8_t* out, const SchedSlot& s, uint8_t type) const {
-    Protocol::buildSchedPacket(rf_.crcTable(),
+    Protocol::buildSchedPacket(rf_.crcTable(), rf_.deviceAddr(),
         s.active ? s.hh : 0x00,
         s.active ? s.mm : 0x00,
         0x00, type, out);
 }
 
 void ScheduleState::buildRgbSlotPkt_(uint8_t* out, const SchedRgbSlot& s, uint8_t type) const {
-    Protocol::buildSchedPacket(rf_.crcTable(),
+    Protocol::buildSchedPacket(rf_.crcTable(), rf_.deviceAddr(),
         s.active ? s.hh    : 0x00,
         s.active ? s.mm    : 0x00,
         s.active ? s.state : 0x00,
@@ -30,7 +30,7 @@ void ScheduleState::send() {
     // Type 07: the target RGB state for the schedule (same as rgbOn.state)
     {
         uint8_t schedState = rgbOn.active ? rgbOn.state : 0x00;
-        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, schedState, 0x00, 0x00, 0x00, 0x07};
+        uint8_t p7[7] = {rf_.deviceAddr(), PROTO_ADDR1, schedState, 0x00, 0x00, 0x00, 0x07};
         rf_.buildPacket(p7, pkts[4]);
     }
 

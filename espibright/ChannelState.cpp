@@ -19,6 +19,6 @@ void ChannelState::send() {
     uint8_t b7 = (dominantLevel() << 4) | 0x06;  // TYPE byte: high=level, low=0x06 (cmd type)
 
     uint8_t pkt[8];
-    Protocol::buildChannelPacket(rf_.crcTable(), b3, b4, b5, b6, b7, pkt);
+    Protocol::buildChannelPacket(rf_.crcTable(), rf_.deviceAddr(), b3, b4, b5, b6, b7, pkt);
     rf_.sendPkt(pkt, true, "CHANNEL CMD");
 }

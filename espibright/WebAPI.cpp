@@ -29,8 +29,11 @@ void WebAPI::buildKnownPackets_() {
         knownPkts_[i].label    = inits[i].label;
         knownPkts_[i].group    = inits[i].group;
         knownPkts_[i].sendTime = inits[i].st;
-        memcpy(knownPkts_[i].payload, inits[i].p, 7);
-        Protocol::buildPacket(t, inits[i].p, knownPkts_[i].pkt);
+        uint8_t p7[7];
+        memcpy(p7, inits[i].p, 7);
+        p7[0] = rf_.deviceAddr();  // substitute live device address
+        memcpy(knownPkts_[i].payload, p7, 7);
+        Protocol::buildPacket(t, p7, knownPkts_[i].pkt);
     }
 }
 
@@ -381,6 +384,8 @@ void WebAPI::handlePacketGapSet_() {
 
 void WebAPI::handleSettingsDevGet_() {
     sendCors_();
+    char addrHex[5];
+    snprintf(addrHex, sizeof(addrHex), "0x%02X", rf_.deviceAddr());
     String j = String("{\"repeat_count\":")      + rf_.repeatCount()
              + ",\"packet_gap_ms\":"             + rf_.packetGapMs()
              + ",\"time_enabled\":"              + (rf_.timeEnabled() ? "true" : "false")
@@ -390,6 +395,7 @@ void WebAPI::handleSettingsDevGet_() {
              + ",\"wifi_ssid\":\""              + String(store_.settings.wifiSsid) + "\""
              + ",\"wifi_pass\":\"***\""
              + ",\"tz_offset_sec\":"             + store_.settings.tzOffsetSec
+             + ",\"device_addr\":"               + rf_.deviceAddr()
              + "}";
     server_.send(200, "application/json", j);
 }
@@ -445,6 +451,14 @@ void WebAPI::handleSettingsDevPost_() {
     if (!doc["tz_offset_sec"].isNull()) {
         store_.settings.tzOffsetSec = doc["tz_offset_sec"].as<int32_t>();
         rebootRequired = true;
+    }
+    if (!doc["device_addr"].isNull()) {
+        int a = doc["device_addr"].as<int>();
+        if (a >= 1 && a <= 255) {
+            store_.settings.deviceAddr = (uint8_t)a;
+            rf_.setDeviceAddr((uint8_t)a);
+            buildKnownPackets_();  // rebuild with new address
+        }
     }
 
     store_.saveSettings();

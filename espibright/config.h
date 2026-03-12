@@ -53,6 +53,9 @@
 // Increment BUILD each release; update YY.M when the calendar month changes.
 #define FW_BUILD     "26.3.1000"
 
+// PROTO_ADDR0: compile-time default only. Actual per-device address is randomly
+// generated on first boot and stored in NVS. The fixture learns this address from
+// the first remote it hears after power-up and ignores all others until power-cycled.
 #define PROTO_ADDR0  0xD0
-#define PROTO_ADDR1  0x23
+#define PROTO_ADDR1  0x23  // constant in all captures
 #define CRC_POLY     0x31

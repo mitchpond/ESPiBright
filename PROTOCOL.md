@@ -19,10 +19,14 @@ All findings confirmed across 5+ independent captures unless noted otherwise.
 
 ```
 Byte:  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]
-       0xD0  0x23   B3    B4    B5    B6   TYPE   CRC
+       ADDR  0x23   B3    B4    B5    B6   TYPE   CRC
 ```
 
-- **`0xD0 0x23`**: fixed preamble / device address
+- **`ADDR`**: device address (byte[0]) — a single random byte, generated once and stored
+  in NVS. The fixture learns this address from the first remote it hears after power-up
+  and ignores all other addresses until it is power-cycled. `0xD0` is the historical
+  example from original captures; actual value is per-device.
+- **`0x23`**: byte[1] — constant in all observed captures.
 - **B3–B6**: payload bytes — meaning depends on TYPE
 - **TYPE**: encodes the command class. For channel commands, the low nibble is the
   command sub-type and the high nibble carries channel data (see TYPE 0x06 below).

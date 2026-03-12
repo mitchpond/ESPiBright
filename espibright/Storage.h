@@ -1,5 +1,6 @@
 #pragma once
 #include <Preferences.h>
+#include <esp_random.h>
 #include "config.h"
 #include "ChannelState.h"
 #include "ScheduleState.h"
@@ -19,6 +20,10 @@ struct DevSettings {
     uint16_t sleepTimeoutSec  = SLEEP_TIMEOUT_MS / 1000;
     uint8_t brightness        = WAKE_BRIGHTNESS;
     int32_t tzOffsetSec       = TZ_OFFSET_SEC;
+    // Per-device RF address byte (byte[0] of every packet).
+    // Randomly generated on first boot and persisted in NVS.
+    // The fixture learns this address from the first remote it hears after power-up.
+    uint8_t deviceAddr        = PROTO_ADDR0;
 };
 
 // ── Storage ───────────────────────────────────────────────────────────────────
@@ -46,7 +51,8 @@ public:
     void loadSettings() {
         DevSettings& s = settings;
         Preferences p;
-        if (!p.begin("dev", true)) return;
+        // Open read-write so we can generate+persist the device address on first boot.
+        p.begin("dev", false);
         auto str = [&](const char* k, char* dst, size_t n) {
             String v = p.getString(k, "");
             if (v.length()) { strncpy(dst, v.c_str(), n - 1); dst[n - 1] = '\0'; }
@@ -60,6 +66,14 @@ public:
         s.sleepTimeoutSec= p.getUShort("stSec", s.sleepTimeoutSec);
         s.brightness     = p.getUChar ("bright",s.brightness);
         s.tzOffsetSec    = p.getInt   ("tz",    s.tzOffsetSec);
+        // Device address: generate random on first boot, restore thereafter.
+        if (p.isKey("addr")) {
+            s.deviceAddr = p.getUChar("addr", PROTO_ADDR0);
+        } else {
+            s.deviceAddr = (uint8_t)(esp_random() & 0xFF);
+            if (!s.deviceAddr) s.deviceAddr = PROTO_ADDR0;  // avoid 0x00
+            p.putUChar("addr", s.deviceAddr);
+        }
         p.end();
     }
 
@@ -76,6 +90,7 @@ public:
         p.putUShort("stSec", s.sleepTimeoutSec);
         p.putUChar ("bright",s.brightness);
         p.putInt   ("tz",    s.tzOffsetSec);
+        p.putUChar ("addr",  s.deviceAddr);
         p.end();
     }
 

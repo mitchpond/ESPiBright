@@ -55,6 +55,7 @@ void setup() {
     rf.setRepeatCount(s.repeatCount);
     rf.setPacketGapMs(s.packetGapMs);
     rf.setTimeEnabled(s.timeEnabled);
+    rf.setDeviceAddr(s.deviceAddr);
 
     // Restore persisted channel/schedule state before anything transmits
     store.loadAll(channels, schedule);

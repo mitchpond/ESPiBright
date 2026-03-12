@@ -648,6 +648,14 @@ details[open] .chev{transform:rotate(180deg)}
           <span class="cfg-lbl">Send time packet after burst</span>
           <label class="sw"><input type="checkbox" id="cfg-time" checked><span class="sw-tr"></span></label>
         </div>
+        <div class="cfg-row">
+          <span class="cfg-lbl">Device address</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-family:var(--mono);color:var(--dim);font-size:.8rem">0x</span>
+            <input type="text" class="cfg-inp" id="cfg-addr" maxlength="2" placeholder="D0" style="width:48px;text-transform:uppercase;font-family:var(--mono)">
+            <span class="pct">fixture must power-cycle to learn new address</span>
+          </div>
+        </div>
 
         <div class="cfg-section-hdr">Display</div>
         <div class="cfg-row">
@@ -759,7 +767,7 @@ details[open] .chev{transform:rotate(180deg)}
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/time_global</td><td class="ad">Global time toggle. <code>{"enabled":true}</code></td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/repeat</td><td class="ad">Set burst repeat count (1–20). <code>{"count":5}</code></td></tr>
           <tr><td><span class="m mG">GET</span></td><td class="ep">/api/settings/device</td><td class="ad">Return all device settings (WiFi password masked).</td></tr>
-          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>. Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
+          <tr><td><span class="m mP">POST</span></td><td class="ep">/api/settings/device</td><td class="ad">Update device settings. Accepts any subset of: <code>repeat_count</code>, <code>packet_gap_ms</code>, <code>time_enabled</code>, <code>sleep_timeout_sec</code>, <code>brightness</code>, <code>hostname</code>, <code>wifi_ssid</code>, <code>wifi_pass</code>, <code>tz_offset_sec</code>, <code>device_addr</code> (1–255; fixture must power-cycle to learn). Returns <code>{"ok":true,"reboot_required":…}</code>.</td></tr>
           <tr><td><span class="m mP">POST</span></td><td class="ep">/api/reboot</td><td class="ad">Reboot the device.</td></tr>
         </tbody>
       </table>
@@ -1286,8 +1294,9 @@ async function cfgLoad() {
       document.getElementById('cfg-bright').value = s.brightness;
       document.getElementById('cfg-bright-val').textContent = s.brightness;
     }
-    if (s.hostname)   document.getElementById('cfg-host').value = s.hostname;
-    if (s.wifi_ssid)  document.getElementById('cfg-ssid').value = s.wifi_ssid;
+    if (s.hostname)    document.getElementById('cfg-host').value = s.hostname;
+    if (s.wifi_ssid)   document.getElementById('cfg-ssid').value = s.wifi_ssid;
+    if (s.device_addr != null) document.getElementById('cfg-addr').value = s.device_addr.toString(16).toUpperCase().padStart(2,'0');
     if (s.tz_offset_sec != null)
       document.getElementById('cfg-tz').value = (s.tz_offset_sec / 3600).toFixed(1).replace(/\.0$/,'');
   } catch(e) {}
@@ -1302,6 +1311,8 @@ function cfgTogglePass() {
   btn.textContent = inp.type === 'password' ? 'show' : 'hide';
 }
 async function cfgSave() {
+  const addrHex = document.getElementById('cfg-addr').value.trim();
+  const addrVal = addrHex ? parseInt(addrHex, 16) : NaN;
   const body = {
     repeat_count:      parseInt(document.getElementById('cfg-repeat').value),
     packet_gap_ms:     parseInt(document.getElementById('cfg-gap').value),
@@ -1312,6 +1323,7 @@ async function cfgSave() {
     wifi_ssid:         document.getElementById('cfg-ssid').value.trim(),
     tz_offset_sec:     Math.round(parseFloat(document.getElementById('cfg-tz').value) * 3600)
   };
+  if (!isNaN(addrVal) && addrVal >= 1 && addrVal <= 255) body.device_addr = addrVal;
   const pw = document.getElementById('cfg-pass').value;
   if (pw) body.wifi_pass = pw;
   const r = await api('/api/settings/device','POST', body);
