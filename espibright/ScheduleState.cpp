@@ -27,10 +27,10 @@ void ScheduleState::send() {
     buildSlotPkt_   (pkts[2], whiteOn,  0x04);
     buildSlotPkt_   (pkts[3], blueOn,   0x05);
 
-    // Type 07: always LIVE state — NOT the frozen slot state
+    // Type 07: the target RGB state for the schedule (same as rgbOn.state)
     {
-        uint8_t liveState = ch_.rgbStateByte();
-        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, liveState, 0x00, 0x00, 0x00, 0x07};
+        uint8_t schedState = rgbOn.active ? rgbOn.state : 0x00;
+        uint8_t p7[7] = {PROTO_ADDR0, PROTO_ADDR1, schedState, 0x00, 0x00, 0x00, 0x07};
         rf_.buildPacket(p7, pkts[4]);
     }
 

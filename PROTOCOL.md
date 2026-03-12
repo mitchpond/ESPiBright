@@ -176,23 +176,23 @@ Blue channel turn-on event.
 B3=HH, B4=MM, B5=0x00, B6=0x00
 ```
 
-### TYPE 07 — State Broadcast
+### TYPE 07 — Schedule RGB State Set
 
-Broadcast of the current live RGB channel state at the moment the schedule is
-saved. Does **not** represent a timed event — carries no HH/MM.
+Sets the target RGB color that the device will use when the schedule fires.
+Does **not** represent a timed event — carries no HH/MM.
 
 ```
-B3 = live rgb_state byte at save time
+B3 = target rgb_state byte (same value as TYPE 08 B5 / rgbOn.state)
      high nibble: 0x8 = on, 0x0 = off
      low nibble:  color preset (0x1–0x9)
+     e.g. 0x86 = purple, 0x81 = blue
 B4, B5, B6 = 0x00
 TYPE = 0x07
 ```
 
-**Critical:** TYPE 07's B3 is completely independent of the frozen state stored
-in TYPE 08/09 B5. They are set separately — TYPE 07 reflects the live channel
-state when the schedule packet burst is built; TYPE 08/09 B5 is frozen from
-when the user last configured that slot.
+B3 matches the RGB ON slot's stored color (`rgbOn.state`). TYPE 07 tells the
+device which color to arm for the upcoming schedule; TYPE 08/09 B5 carry the
+same value as part of the timed ON/OFF events.
 
 ### TYPE 08 — RGB ON
 
@@ -233,7 +233,7 @@ B3=HH, B4=MM, B5=0x00, B6=0x00
 | 03   | White   | OFF             | HH   | `0x00`          | 1        |
 | 04   | White   | ON              | HH   | `0x00`          | 2        |
 | 05   | Blue    | ON              | HH   | `0x00`          | 3        |
-| 07   | —       | State broadcast | live rgb_state | `0x00` | 4  |
+| 07   | —       | RGB state set   | rgbOn.state    | `0x00` | 4  |
 | 08   | RGB     | ON              | HH   | frozen rgb_state| 5        |
 | 09   | RGB     | OFF             | HH   | frozen rgb_state| 6        |
 

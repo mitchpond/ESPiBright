@@ -26,7 +26,7 @@ TxLog         txLog;
 RFTransmitter rf(txLog);
 ChannelState  channels(rf);
 ClockState    clock_(rf);
-ScheduleState schedule(rf, channels);
+ScheduleState schedule(rf);
 Storage       store;
 Display       display(channels, schedule, clock_, rf);
 WebAPI        web(rf, channels, schedule, clock_, txLog, store, display);

@@ -1,7 +1,6 @@
 #pragma once
 #include <Arduino.h>
 #include "RFTransmitter.h"
-#include "ChannelState.h"
 
 // ── ScheduleState ─────────────────────────────────────────────────────────────
 // Stores the six schedule slots and builds/transmits the schedule packet burst.
@@ -12,13 +11,13 @@
 //   03 = White OFF   B5=0x00
 //   04 = White ON    B5=0x00
 //   05 = Blue  ON    B5=0x00
-//   07 = State broadcast  B3=LIVE rgbStateByte  (independent of slot B5)
+//   07 = State set   B3=rgbOn.state  (the target RGB color for the schedule)
 //   08 = RGB   ON    B5=rgb_state FROZEN at schedule-save time
 //   09 = RGB   OFF   B5=rgb_state FROZEN (stored for restore at next ON)
 //
 // Disable a slot by setting active=false (sends HH=MM=B5=0x00).
-// Type 07 always reflects the LIVE channel state at send time.
-// Types 08/09 carry their own frozen state, independent of the live channel.
+// Type 07 B3 == rgbOn.state: tells the device which color to use when the
+// schedule fires. Types 08/09 B5 carry the same value independently.
 
 struct SchedSlot {
     bool    active = true;
@@ -40,8 +39,7 @@ public:
     SchedRgbSlot rgbOn    = {true, 11,  0, 0x86};
     SchedRgbSlot rgbOff   = {true, 23,  0, 0x86};
 
-    ScheduleState(RFTransmitter& rf, ChannelState& ch)
-        : rf_(rf), ch_(ch) {}
+    explicit ScheduleState(RFTransmitter& rf) : rf_(rf) {}
 
     // Build and transmit the full 7-packet schedule burst (types 02–05, 07–09).
     void send();
@@ -51,7 +49,6 @@ public:
 
 private:
     RFTransmitter& rf_;
-    ChannelState&  ch_;
 
     void buildSlotPkt_(uint8_t* out, const SchedSlot& s, uint8_t type) const;
     void buildRgbSlotPkt_(uint8_t* out, const SchedRgbSlot& s, uint8_t type) const;
