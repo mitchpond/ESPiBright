@@ -8,6 +8,18 @@ short-range 433 MHz OOK packets; ESPiBright reverse-engineers and replays
 that protocol over RF while exposing a clean web UI and REST API from
 anywhere on your local network.
 
+Please keep in mind that this is early in development and this is a personal pet project.
+The docs may not always be 100% up-to-date and the API is not at all stable as I am still
+figuring out exactly what I want it to be. If you find this, build it, and find it useful,
+know that I am overjoyed that anyone else appreciates it, but please be patient as I get it
+to a solid 1.0 offering.
+
+*Gen AI Disclaimer:* I am making use of Claude Code to help with _primarily_ the UI, as this
+is an area that I am woefully underskilled in. Additionally I am using it to help keep my
+mess of thoughts coherent enough to continue working on this given that I only get an hour here
+or a few minutes there. Any C that it ends up writing or refactoring is read and understood by
+me before being committed. I can't say the same for the HTML/JS/CSS as I simply do not have the time.
+
 ---
 
 ## Features
